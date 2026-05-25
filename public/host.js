@@ -224,6 +224,13 @@ socket.on('state-changed', (data) => {
     introQIndex.textContent = `QUESTION ${currentQuestion.index + 1} OF ${questionCount}`;
     introQTitle.textContent = currentQuestion.question;
     
+    const typeLabels = {
+      'multiple-choice': 'Multiple Choice 📝',
+      'true-false': 'True / False ⚖️',
+      'short-answer': 'Short Answer ✍️'
+    };
+    document.getElementById('intro-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
+    
     showSection(stateIntro);
     
     // Sound/visual trigger for countdown
@@ -245,6 +252,13 @@ socket.on('state-changed', (data) => {
     questionTimer.classList.remove('warning');
     questionQTitle.textContent = currentQuestion.question;
     questionAnswersCount.textContent = '0';
+    
+    const typeLabels = {
+      'multiple-choice': 'Multiple Choice 📝',
+      'true-false': 'True / False ⚖️',
+      'short-answer': 'Short Answer ✍️'
+    };
+    document.getElementById('question-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
     
     // Check question type to render answers layout
     if (currentQuestion.type === 'multiple-choice') {
