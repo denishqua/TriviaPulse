@@ -235,6 +235,12 @@ socket.on('state-changed', (data) => {
       questionAnswersGrid.style.display = 'grid';
       questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
       
+      // Reset True/False swaps to defaults
+      cardOptA.className = 'answer-card red';
+      cardOptA.querySelector('.answer-shape').innerHTML = '<div class="shape-tri"></div>';
+      cardOptB.className = 'answer-card blue';
+      cardOptB.querySelector('.answer-shape').innerHTML = '<div class="shape-dia"></div>';
+      
       cardOptA.style.display = 'flex';
       cardOptB.style.display = 'flex';
       cardOptC.style.display = 'flex';
@@ -247,6 +253,13 @@ socket.on('state-changed', (data) => {
     } else if (currentQuestion.type === 'true-false') {
       questionAnswersGrid.style.display = 'grid';
       questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      
+      // Swap colors and shapes to align with standard (True = Blue Diamond, False = Red Triangle)
+      cardOptA.className = 'answer-card blue';
+      cardOptA.querySelector('.answer-shape').innerHTML = '<div class="shape-dia"></div>';
+      
+      cardOptB.className = 'answer-card red';
+      cardOptB.querySelector('.answer-shape').innerHTML = '<div class="shape-tri"></div>';
       
       cardOptA.style.display = 'flex';
       cardOptB.style.display = 'flex';
@@ -293,15 +306,41 @@ socket.on('state-changed', (data) => {
       
       barLblOptB.textContent = `${stats.shortAnswerWrong} Wrong`;
       barOptB.style.setProperty('--final-height', getPercent(stats.shortAnswerWrong));
+
+      // Set Short Answer text labels
+      document.getElementById('chart-txt-A').textContent = 'Correct Match';
+      document.getElementById('chart-txt-B').textContent = 'Incorrect Match';
     } else {
       // Render standard choice bars
       resultsChart.style.display = 'flex';
       
-      barOptA.className = 'chart-bar red';
-      barOptB.className = 'chart-bar blue';
-      
       barOptA.parentElement.style.display = 'flex';
       barOptB.parentElement.style.display = 'flex';
+
+      // Set text and check layout swaps for True/False colors
+      if (currentQuestion.type === 'true-false') {
+        barOptA.className = 'chart-bar blue';
+        barOptB.className = 'chart-bar red';
+        
+        barOptA.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-dia" style="width: 18px; height: 18px;"></div><span id="chart-txt-A" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">True</span>';
+        barOptB.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div><span id="chart-txt-B" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">False</span>';
+
+        document.getElementById('chart-txt-A').textContent = 'True';
+        document.getElementById('chart-txt-B').textContent = 'False';
+        
+        barOptC.parentElement.style.display = 'none';
+        barOptD.parentElement.style.display = 'none';
+      } else {
+        // Multiple choice defaults
+        barOptA.className = 'chart-bar red';
+        barOptB.className = 'chart-bar blue';
+        
+        barOptA.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div><span id="chart-txt-A" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option A</span>';
+        barOptB.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-dia" style="width: 18px; height: 18px;"></div><span id="chart-txt-B" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option B</span>';
+
+        document.getElementById('chart-txt-A').textContent = currentQuestion.options.A;
+        document.getElementById('chart-txt-B').textContent = currentQuestion.options.B;
+      }
       
       barLblOptA.textContent = stats.A;
       barOptA.style.setProperty('--final-height', getPercent(stats.A));
@@ -318,7 +357,10 @@ socket.on('state-changed', (data) => {
         
         barLblOptD.textContent = stats.D;
         barOptD.style.setProperty('--final-height', getPercent(stats.D));
-      } else {
+
+        document.getElementById('chart-txt-C').textContent = currentQuestion.options.C;
+        document.getElementById('chart-txt-D').textContent = currentQuestion.options.D;
+      } else if (currentQuestion.type !== 'true-false') {
         barOptC.parentElement.style.display = 'none';
         barOptD.parentElement.style.display = 'none';
       }

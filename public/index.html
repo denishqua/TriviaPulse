@@ -62,14 +62,16 @@
       </div>
     </section>
 
-    <!-- 5. CONTROLLER: TRUE / FALSE -->
+    <!-- 5. CONTROLLER: TRUE / FALSE (Aligned: True = Blue Diamond, False = Red Triangle) -->
     <section id="panel-controller-tf" class="controller-panel animate-fade-in" style="display: none;">
-      <div class="player-tf-buttons">
-        <button class="player-btn blue" id="pbtn-tf-true" style="font-size: 2rem; color: white;">
-          True
+      <div class="player-tf-buttons" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+        <button class="player-btn blue" id="pbtn-tf-true" style="font-size: 2.2rem; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
+          <div class="shape-dia" style="width: 28px; height: 28px; background: white; transform: rotate(45deg);"></div>
+          <span>True</span>
         </button>
-        <button class="player-btn red" id="pbtn-tf-false" style="font-size: 2rem; color: white;">
-          False
+        <button class="player-btn red" id="pbtn-tf-false" style="font-size: 2.2rem; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
+          <div class="shape-tri" style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 26px solid white;"></div>
+          <span>False</span>
         </button>
       </div>
     </section>

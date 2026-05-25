@@ -237,6 +237,10 @@ io.on('connection', (socket) => {
         // Game Over! Podium
         game.gameState = 'PODIUM';
         const podium = getLeaderboard(game).slice(0, 3);
+        
+        // Save podium results persistently
+        savePodiumResults(game);
+
         io.to(`game_${game.pin}`).emit('state-changed', {
           gameState: 'PODIUM',
           podium
@@ -563,6 +567,50 @@ function getLeaderboard(game) {
       lastAnswerCorrect: p.lastAnswerCorrect
     }))
     .sort((a, b) => b.score - a.score);
+}
+
+function savePodiumResults(game) {
+  try {
+    const resultsDir = path.join(__dirname, 'results');
+    if (!fs.existsSync(resultsDir)) {
+      fs.mkdirSync(resultsDir);
+    }
+
+    const leaderboard = getLeaderboard(game);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `podium_${game.quizName.toLowerCase().replace(/\s+/g, '_')}_${timestamp}.txt`;
+    const filepath = path.join(resultsDir, filename);
+
+    let content = `====================================================\n`;
+    content += ` TRIVIAPULSE GAME RESULTS\n`;
+    content += `====================================================\n`;
+    content += `Date/Time  : ${new Date().toLocaleString()}\n`;
+    content += `Quiz Name  : ${game.quizName}\n`;
+    content += `Total Players: ${game.players.size}\n\n`;
+
+    content += `🏆 FINAL CHAMPIONS (PODIUM) 🏆\n`;
+    content += `----------------------------------------------------\n`;
+    
+    const places = ['1st Place 🥇', '2nd Place 🥈', '3rd Place 🥉'];
+    const podium = leaderboard.slice(0, 3);
+    
+    podium.forEach((player, idx) => {
+      content += `${places[idx]}: ${player.nickname} - ${player.score} pts (Streak: ${player.streak})\n`;
+    });
+    
+    content += `\nFULL STANDINGS\n`;
+    content += `----------------------------------------------------\n`;
+    leaderboard.forEach((player, idx) => {
+      content += `${idx + 1}. ${player.nickname} - ${player.score} pts (Streak: ${player.streak})\n`;
+    });
+    content += `====================================================\n`;
+
+    fs.writeFileSync(filepath, content, 'utf-8');
+    console.log(`Podium results saved successfully to ${filepath}`);
+
+  } catch (error) {
+    console.error('Failed to save podium results:', error);
+  }
 }
 
 // Start Server
