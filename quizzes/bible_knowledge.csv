@@ -1,0 +1,8 @@
+Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer
+multiple-choice,"What is the first book of the Bible?",15,"Exodus","Genesis","Leviticus","Numbers","Genesis"
+true-false,"Noah's Ark came to rest on Mount Ararat after the Great Flood.",15,"True","False",,,"True"
+short-answer,"How many disciples did Jesus choose to follow Him?",20,,,,,"12"
+multiple-choice,"Which young shepherd defeated the giant Philistine warrior named Goliath?",15,"Saul","Solomon","David","Samson","David"
+short-answer,"How many commandments did God give to Moses on Mount Sinai?",20,,,,,"10"
+true-false,"The Apostle Paul was the author of the Book of Revelation.",15,"True","False",,,"False"
+short-answer,"How many days and nights did it rain during Noah's Great Flood?",20,,,,,"40"
