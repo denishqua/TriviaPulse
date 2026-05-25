@@ -6,6 +6,7 @@
   <title>TriviaPulse - Host Projector</title>
   <link rel="stylesheet" href="app.css">
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -49,6 +50,10 @@
         <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); min-width: 320px;">
           <div class="label">Join Address</div>
           <div class="value" id="lobby-url" style="color: var(--purple-neon); font-size: 1.8rem;">http://192.168.1.15:3000</div>
+        </div>
+        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; gap: 8px;">
+          <div id="lobby-qr" style="background: white; padding: 6px; border-radius: 8px; box-shadow: var(--shadow-btn);"></div>
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Scan to Join</span>
         </div>
         <div class="lobby-card glass-panel" style="border-color: var(--yellow-cir);">
           <div class="label">Players joined</div>

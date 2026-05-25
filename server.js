@@ -264,6 +264,11 @@ io.on('connection', (socket) => {
       return socket.emit('join-response', { success: false, message: 'Game has already started.' });
     }
 
+    // Limit lobby to 50 players
+    if (game.players.size >= 50) {
+      return socket.emit('join-response', { success: false, message: 'Lobby is full. Max 50 players allowed.' });
+    }
+
     // Check if nickname is taken in this game
     for (const p of game.players.values()) {
       if (p.nickname.toLowerCase() === nickname.toLowerCase().trim()) {

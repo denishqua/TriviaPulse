@@ -105,8 +105,24 @@ socket.on('game-created', (data) => {
   
   document.getElementById('header-quiz-name').textContent = quizName;
 
-  // Render join url & game PIN
-  lobbyUrl.textContent = `http://${data.localIp}:${data.port}`;
+  // Render join url
+  const joinUrlText = `http://${data.localIp}:${data.port}`;
+  lobbyUrl.textContent = joinUrlText;
+  
+  // Generate scan-to-join QR Code
+  const qrContainer = document.getElementById('lobby-qr');
+  if (qrContainer) {
+    qrContainer.innerHTML = ''; // Clear previous instances
+    new QRCode(qrContainer, {
+      text: joinUrlText,
+      width: 90,
+      height: 90,
+      colorDark: "#060417",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
+
   if (lobbyPin) {
     lobbyPin.textContent = data.pin;
   }
