@@ -14,9 +14,13 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3000;
 const isLan = process.argv.includes('--lan');
-const HOST = isLan ? '0.0.0.0' : '127.0.0.1';
+const isTunnel = process.argv.includes('--tunnel');
+const PORT = 3000; // Enforced for Pinggy forwarding
+const HOST = isTunnel ? '127.0.0.1' : (isLan ? '0.0.0.0' : '127.0.0.1');
+
+let publicTunnelUrl = '';
+let tunnelProcess = null;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -95,7 +99,8 @@ app.get('/api/quizzes', (req, res) => {
         name: path.basename(file, '.csv').replace(/_/g, ' ').toUpperCase()
       }));
       
-    res.json({ quizzes: csvFiles, localIp: isLan ? getLocalIpAddress() : 'localhost', port: PORT });
+    const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
+    res.json({ quizzes: csvFiles, localIp: resolvedIp, port: PORT });
   });
 });
 
@@ -175,11 +180,12 @@ io.on('connection', (socket) => {
       games.set(pin, newGame);
       socket.join(`game_${pin}`);
 
+      const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
       socket.emit('game-created', {
         pin,
         quizName: newGame.quizName,
         questionCount: questions.length,
-        localIp: isLan ? getLocalIpAddress() : 'localhost',
+        localIp: resolvedIp,
         port: PORT
       });
 
@@ -620,7 +626,11 @@ function savePodiumResults(game) {
 
 // Start Server
 server.listen(PORT, HOST, () => {
-  if (isLan) {
+  if (isTunnel) {
+    console.log(`TriviaPulse server is running LOCALLY on http://127.0.0.1:${PORT}`);
+    console.log(`Starting background Pinggy tunnel...`);
+    startPinggyTunnel();
+  } else if (isLan) {
     console.log(`TriviaPulse server is running on http://localhost:${PORT}`);
     console.log(`LAN players can join at http://${getLocalIpAddress()}:${PORT}`);
   } else {
@@ -628,3 +638,49 @@ server.listen(PORT, HOST, () => {
     console.log(`(LAN multiplayer is disabled. Restart with 'node server.js --lan' to allow others to join on Wi-Fi)`);
   }
 });
+
+function startPinggyTunnel() {
+  const { spawn } = require('child_process');
+  
+  console.log('Spawning: ssh -p 443 -R 0:localhost:3000 -o StrictHostKeyChecking=no free@a.pinggy.io');
+  
+  tunnelProcess = spawn('ssh', [
+    '-p', '443',
+    '-R', `0:localhost:${PORT}`,
+    '-o', 'StrictHostKeyChecking=no',
+    'free@a.pinggy.io'
+  ]);
+
+  const urlRegex = /(https?:\/\/[a-z0-9-.]+\.pinggy(?:-free)?\.link)/gi;
+
+  function handleStreamData(data) {
+    const chunk = data.toString();
+    // Forward tunnel messages to standard console for transparency
+    process.stdout.write(chunk);
+
+    const matches = chunk.match(urlRegex);
+    if (matches) {
+      // Prioritize HTTPS URL
+      const httpsUrl = matches.find(url => url.startsWith('https://'));
+      const resolvedUrl = httpsUrl || matches[0];
+
+      if (resolvedUrl !== publicTunnelUrl) {
+        publicTunnelUrl = resolvedUrl;
+        console.log(`\n====================================================`);
+        console.log(`🏆 PUBLIC PINGGY TUNNEL RESOLVED: ${publicTunnelUrl}`);
+        console.log(`====================================================\n`);
+        
+        // Broadcast resolved tunnel URL to all connected sockets
+        io.emit('tunnel-url-updated', { url: publicTunnelUrl });
+      }
+    }
+  }
+
+  tunnelProcess.stdout.on('data', handleStreamData);
+  tunnelProcess.stderr.on('data', handleStreamData);
+
+  tunnelProcess.on('close', (code) => {
+    console.log(`Pinggy SSH process exited with code ${code}`);
+    publicTunnelUrl = '';
+  });
+}

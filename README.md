@@ -53,6 +53,14 @@ node server.js
 - **Projector View**: Go to `http://localhost:3000/host.html`.
 - **Player View**: Go to `http://localhost:3000/` in an incognito tab.
 
+#### 🌍 Mode C: Internet / Public WAN Multiplayer (via Pinggy SSH Tunnel)
+Allows players anywhere in the world to join your locally hosted session from any cellular connection or external Wi-Fi network! No complex network setup or port-forwarding needed.
+```bash
+node server.js --tunnel
+```
+- **Projector View**: Go to `http://localhost:3000/host.html`.
+- **Player View**: Once the tunnel establishes, the secure HTTPS URL (e.g. `https://xxxx.run.pinggy-free.link`) automatically resolves in the console. The host lobby card dynamically updates the join address and draws the large `200x200` scan-to-join QR code on-the-fly. Players just scan to play!
+
 ---
 
 ## ✍️ How to Add Custom Quizzes

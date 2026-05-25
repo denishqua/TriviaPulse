@@ -106,21 +106,36 @@ socket.on('game-created', (data) => {
   document.getElementById('header-quiz-name').textContent = quizName;
 
   // Render join url
-  const joinUrlText = `http://${data.localIp}:${data.port}`;
+  let joinUrlText;
+  let shouldRenderQR = true;
+  
+  if (data.localIp.startsWith('http://') || data.localIp.startsWith('https://')) {
+    joinUrlText = data.localIp;
+  } else if (data.localIp === 'Generating tunnel...') {
+    joinUrlText = 'Generating tunnel...';
+    shouldRenderQR = false;
+  } else {
+    joinUrlText = `http://${data.localIp}:${data.port}`;
+  }
+  
   lobbyUrl.textContent = joinUrlText;
   
   // Generate scan-to-join QR Code (Scaled up for far distance scanning)
   const qrContainer = document.getElementById('lobby-qr');
   if (qrContainer) {
     qrContainer.innerHTML = ''; // Clear previous instances
-    new QRCode(qrContainer, {
-      text: joinUrlText,
-      width: 200,
-      height: 200,
-      colorDark: "#060417",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.M
-    });
+    if (shouldRenderQR) {
+      new QRCode(qrContainer, {
+        text: joinUrlText,
+        width: 200,
+        height: 200,
+        colorDark: "#060417",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } else {
+      qrContainer.innerHTML = '<div style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">Waiting for tunnel...</div>';
+    }
   }
 
   if (lobbyPin) {
@@ -128,6 +143,25 @@ socket.on('game-created', (data) => {
   }
   
   showSection(stateLobby);
+});
+
+// Event: Pinggy tunnel URL generated
+socket.on('tunnel-url-updated', (data) => {
+  console.log('Tunnel URL received:', data.url);
+  lobbyUrl.textContent = data.url;
+  
+  const qrContainer = document.getElementById('lobby-qr');
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: data.url,
+      width: 200,
+      height: 200,
+      colorDark: "#060417",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
 });
 
 // Event: New Player Joins Lobby
