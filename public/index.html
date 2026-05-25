@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TriviaPulse - Player Controller</title>
+  <link rel="stylesheet" href="app.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <!-- Ambient BG Shapes -->
+  <div class="bg-shapes">
+    <div class="bg-shape bg-shape-1 animate-float"></div>
+    <div class="bg-shape bg-shape-2 animate-float" style="animation-delay: -1.5s;"></div>
+  </div>
+
+  <header>
+    <div class="logo">
+      <span class="logo-icon" style="background: linear-gradient(135deg, var(--purple-neon), var(--pink-neon));">⚡</span>
+      <span>TriviaPulse</span>
+    </div>
+    <div id="player-nickname-header" style="font-weight: 700; color: var(--yellow-cir);"></div>
+  </header>
+
+  <main class="player-container">
+
+    <!-- JOIN NICKNAME FORM (PINs removed for direct single-lobby join) -->
+    <section id="panel-join-nickname" class="join-card glass-panel animate-fade-in">
+      <h1>Join Game</h1>
+      <div class="form-group">
+        <label for="input-nickname">Choose Nickname</label>
+        <input type="text" id="input-nickname" placeholder="Your name (max 16 chars)" maxlength="16" autofocus>
+      </div>
+      <button id="btn-submit-nickname" class="btn-primary btn-block">Enter Lobby</button>
+      <div id="nickname-error" style="color: var(--red-tri); margin-top: 15px; text-align: center; font-weight: 600;"></div>
+    </section>
+
+    <!-- 3. LOBBY WAITING ROOM -->
+    <section id="panel-lobby-wait" class="wait-container glass-panel animate-fade-in" style="display: none;">
+      <div class="spinner"></div>
+      <div class="wait-nickname" id="wait-player-name">Player</div>
+      <p style="color: var(--text-secondary); font-size: 1.2rem;">You're in! Check your name on the host projector screen.</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 20px;">Waiting for the host to start the game...</p>
+    </section>
+
+    <!-- 4. CONTROLLER: MULTIPLE CHOICE -->
+    <section id="panel-controller-mc" class="controller-panel animate-fade-in" style="display: none;">
+      <div class="player-grid-buttons">
+        <button class="player-btn red" id="pbtn-opt-A">
+          <div class="shape-tri"></div>
+        </button>
+        <button class="player-btn blue" id="pbtn-opt-B">
+          <div class="shape-dia"></div>
+        </button>
+        <button class="player-btn yellow" id="pbtn-opt-C">
+          <div class="shape-cir"></div>
+        </button>
+        <button class="player-btn green" id="pbtn-opt-D">
+          <div class="shape-squ"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. CONTROLLER: TRUE / FALSE -->
+    <section id="panel-controller-tf" class="controller-panel animate-fade-in" style="display: none;">
+      <div class="player-tf-buttons">
+        <button class="player-btn blue" id="pbtn-tf-true" style="font-size: 2rem; color: white;">
+          True
+        </button>
+        <button class="player-btn red" id="pbtn-tf-false" style="font-size: 2rem; color: white;">
+          False
+        </button>
+      </div>
+    </section>
+
+    <!-- 6. CONTROLLER: SHORT ANSWER -->
+    <section id="panel-controller-sa" class="controller-panel glass-panel animate-fade-in" style="display: none;">
+      <div class="player-short-answer-panel">
+        <h2>Type Your Answer</h2>
+        <div class="form-group" style="margin-top: 20px;">
+          <input type="text" id="input-short-answer" class="short-answer-input" placeholder="Type here..." autofocus>
+        </div>
+        <button id="btn-submit-short-answer" class="btn-primary btn-block" style="padding: 15px 0;">Submit Answer</button>
+      </div>
+    </section>
+
+    <!-- 7. PLAYER ACTION WAITING SCREEN (SUBMITTED / TRANSITION) -->
+    <section id="panel-player-wait" class="wait-container glass-panel animate-fade-in" style="display: none;">
+      <div class="spinner"></div>
+      <p style="color: var(--text-secondary); font-size: 1.3rem;" id="player-wait-message">Answer submitted! Waiting for other players...</p>
+    </section>
+
+    <!-- 8. FEEDBACK SCREEN OVERLAYS -->
+    <div id="feedback-correct" class="feedback-screen correct" style="display: none;">
+      <div class="feedback-title">CORRECT! 🎉</div>
+      <div class="feedback-points" id="lbl-feedback-points-gained">+0 points</div>
+      <div class="feedback-streak" id="lbl-feedback-streak">🔥 Streak: 0</div>
+      <div class="feedback-rank" id="lbl-feedback-rank-c">Current Rank: 1</div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 30px;">Waiting for next question...</p>
+    </div>
+
+    <div id="feedback-incorrect" class="feedback-screen incorrect" style="display: none;">
+      <div class="feedback-title" id="lbl-feedback-incorrect-title">INCORRECT 😢</div>
+      <div class="feedback-points" style="color: var(--red-tri);">+0 points</div>
+      <div class="feedback-rank" id="lbl-feedback-rank-i">Current Rank: 1</div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 30px;">Keep trying on the next one!</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 10px;">Waiting for next question...</p>
+    </div>
+
+  </main>
+
+  <script src="player.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriviaPulse - Host Projector</title>
+  <link rel="stylesheet" href="app.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <!-- Floating Ambient BG Shapes -->
+  <div class="bg-shapes">
+    <div class="bg-shape bg-shape-1 animate-float"></div>
+    <div class="bg-shape bg-shape-2 animate-float" style="animation-delay: -1s;"></div>
+    <div class="bg-shape bg-shape-3 animate-float" style="animation-delay: -2s;"></div>
+    <div class="bg-shape bg-shape-4 animate-float" style="animation-delay: -3s;"></div>
+  </div>
+
+  <header>
+    <div class="logo">
+      <span class="logo-icon" style="background: linear-gradient(135deg, var(--purple-neon), var(--pink-neon));">⚡</span>
+      <span>TriviaPulse <span style="font-weight: 300; font-size: 1.2rem; color: var(--purple-neon);">Cosmic Host</span></span>
+    </div>
+    <div id="header-quiz-name" style="font-weight: 700; font-size: 1.2rem; color: var(--yellow-cir);"></div>
+  </header>
+
+  <main class="host-container">
+
+    <!-- 1. SETUP STATE -->
+    <section id="state-setup" class="host-setup glass-panel animate-fade-in">
+      <h1 class="glow-text">Create a Game Lobby</h1>
+      <p style="color: var(--text-secondary); margin-bottom: 30px;">Select a CSV quiz from the list below to host a local session.</p>
+      
+      <div class="quiz-select-wrapper">
+        <select id="quiz-select">
+          <option value="" disabled selected>Loading available quizzes...</option>
+        </select>
+      </div>
+
+      <button id="btn-create-lobby" class="btn-primary" disabled>Create Lobby</button>
+      
+      <div id="setup-error" style="color: var(--red-tri); margin-top: 20px; font-weight: 600;"></div>
+    </section>
+
+    <!-- 2. LOBBY STATE -->
+    <section id="state-lobby" class="host-lobby animate-fade-in" style="display: none;">
+      <div class="lobby-header-cards">
+        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); min-width: 320px;">
+          <div class="label">Join Address</div>
+          <div class="value" id="lobby-url" style="color: var(--purple-neon); font-size: 1.8rem;">http://192.168.1.15:3000</div>
+        </div>
+        <div class="lobby-card glass-panel" style="border-color: var(--yellow-cir);">
+          <div class="label">Players joined</div>
+          <div class="value" id="lobby-player-count" style="color: var(--yellow-cir);">0</div>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="width: 100%; padding: 30px;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 20px;">Lobby</h2>
+        <div class="lobby-players-grid" id="lobby-players-grid">
+          <!-- Dynamically populated players list -->
+        </div>
+      </div>
+
+      <button id="btn-start-game" class="btn-primary animate-float" style="margin-top: 40px; display: none;">Start Game</button>
+    </section>
+
+    <!-- 3. QUESTION INTRO STATE -->
+    <section id="state-intro" class="host-intro animate-fade-in" style="display: none;">
+      <div class="q-indicator" id="intro-q-index" style="text-align: center; margin-bottom: 20px;">QUESTION 1 OF 5</div>
+      <div class="q-title glow-text" id="intro-q-title">What is the capital of France?</div>
+      
+      <div class="intro-countdown-container">
+        <div class="intro-number" id="intro-countdown">3</div>
+      </div>
+    </section>
+
+    <!-- 4. QUESTION ACTIVE STATE -->
+    <section id="state-question" class="host-question animate-fade-in" style="display: none;">
+      <div class="question-top-panel">
+        <div class="q-indicator" id="question-q-index">QUESTION 1 OF 5</div>
+        <div class="timer-circle" id="question-timer">20</div>
+      </div>
+
+      <div class="q-title" id="question-q-title">What is the capital of France?</div>
+
+      <div class="host-grid-panel">
+        <!-- Visual cues for answers (for players to see options on host screen) -->
+        <div class="answers-grid" id="question-answers-grid">
+          <div class="answer-card red" id="card-opt-A">
+            <div class="answer-shape"><div class="shape-tri"></div></div>
+            <span class="option-text" id="lbl-opt-A">Paris</span>
+          </div>
+          <div class="answer-card blue" id="card-opt-B">
+            <div class="answer-shape"><div class="shape-dia"></div></div>
+            <span class="option-text" id="lbl-opt-B">London</span>
+          </div>
+          <div class="answer-card yellow" id="card-opt-C">
+            <div class="answer-shape"><div class="shape-cir"></div></div>
+            <span class="option-text" id="lbl-opt-C">Berlin</span>
+          </div>
+          <div class="answer-card green" id="card-opt-D">
+            <div class="answer-shape"><div class="shape-squ"></div></div>
+            <span class="option-text" id="lbl-opt-D">Rome</span>
+          </div>
+        </div>
+
+        <!-- Answers count side panel -->
+        <div class="stats-panel">
+          <div class="glass-panel stat-box">
+            <div class="count" id="question-answers-count">0</div>
+            <div class="desc">Answers</div>
+          </div>
+          <button id="btn-show-results" class="btn-primary" style="padding: 15px 0; width: 100%;">Skip Timer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. QUESTION RESULTS STATE -->
+    <section id="state-results" class="host-results animate-fade-in" style="display: none;">
+      <div class="q-title" id="results-q-title">What is the capital of France?</div>
+
+      <!-- Vertical Chart displaying answer choices distribution -->
+      <div class="results-chart-container" id="results-chart">
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar red" id="bar-opt-A" style="--final-height: 0%; height: 0%;">
+            <span class="count-label" id="bar-lbl-opt-A">0</span>
+          </div>
+          <div class="chart-label"><div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div></div>
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar blue" id="bar-opt-B" style="--final-height: 0%; height: 0%;">
+            <span class="count-label" id="bar-lbl-opt-B">0</span>
+          </div>
+          <div class="chart-label"><div class="shape-dia" style="width: 18px; height: 18px;"></div></div>
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar yellow" id="bar-opt-C" style="--final-height: 0%; height: 0%;">
+            <span class="count-label" id="bar-lbl-opt-C">0</span>
+          </div>
+          <div class="chart-label"><div class="shape-cir" style="width: 20px; height: 20px;"></div></div>
+        </div>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar green" id="bar-opt-D" style="--final-height: 0%; height: 0%;">
+            <span class="count-label" id="bar-lbl-opt-D">0</span>
+          </div>
+          <div class="chart-label"><div class="shape-squ" style="width: 18px; height: 18px;"></div></div>
+        </div>
+      </div>
+
+      <div class="results-correct-answer">
+        <span>Correct Answer: </span>
+        <strong id="results-correct-text" style="color: var(--green-squ);">Paris</strong>
+      </div>
+
+      <div style="text-align: right; margin-top: 30px;">
+        <button id="btn-next" class="btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- 6. LEADERBOARD STATE -->
+    <section id="state-leaderboard" class="host-leaderboard animate-fade-in" style="display: none;">
+      <h1 class="leaderboard-title glow-text">Leaderboard</h1>
+
+      <div class="leaderboard-list" id="leaderboard-list">
+        <!-- Dynamically populated top 5 players rows -->
+      </div>
+
+      <div style="text-align: right; margin-top: 40px;">
+        <button id="btn-leaderboard-next" class="btn-primary">Next Question</button>
+      </div>
+    </section>
+
+    <!-- 7. PODIUM STATE -->
+    <section id="state-podium" class="host-podium animate-fade-in" style="display: none;">
+      <h1 class="leaderboard-title glow-text" style="font-size: 3rem;">Game Over!</h1>
+      <p style="text-align: center; color: var(--text-secondary); font-size: 1.2rem; margin-top: -30px; margin-bottom: 40px;">Here are your final podium champions!</p>
+
+      <div class="podium-container">
+        <!-- 2nd Place -->
+        <div class="podium-column" id="podium-2nd" style="opacity: 0;">
+          <div class="podium-player-name" id="podium-2nd-name">Player 2</div>
+          <div class="podium-pedestal silver">
+            <span class="podium-rank-num">2</span>
+            <span class="podium-score" id="podium-2nd-score">0 pts</span>
+          </div>
+        </div>
+
+        <!-- 1st Place -->
+        <div class="podium-column" id="podium-1st" style="opacity: 0;">
+          <div class="podium-player-name" id="podium-1st-name">Player 1</div>
+          <div class="podium-pedestal gold">
+            <span class="podium-rank-num" style="font-size: 5rem;">1</span>
+            <span class="podium-score" id="podium-1st-score">0 pts</span>
+          </div>
+        </div>
+
+        <!-- 3rd Place -->
+        <div class="podium-column" id="podium-3rd" style="opacity: 0;">
+          <div class="podium-player-name" id="podium-3rd-name">Player 3</div>
+          <div class="podium-pedestal bronze">
+            <span class="podium-rank-num">3</span>
+            <span class="podium-score" id="podium-3rd-score">0 pts</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 40px;">
+        <button id="btn-restart" class="btn-primary" onclick="window.location.reload();">Host Another Game</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="host.js"></script>
+</body>
+</html>
