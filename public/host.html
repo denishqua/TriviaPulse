@@ -46,18 +46,18 @@
 
     <!-- 2. LOBBY STATE -->
     <section id="state-lobby" class="host-lobby animate-fade-in" style="display: none;">
-      <div class="lobby-header-cards">
-        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); min-width: 320px;">
-          <div class="label">Join Address</div>
-          <div class="value" id="lobby-url" style="color: var(--purple-neon); font-size: 1.8rem;">http://192.168.1.15:3000</div>
+      <div class="lobby-header-cards" style="display: flex; gap: 20px; align-items: stretch; justify-content: center; width: 100%;">
+        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); min-width: 360px; display: flex; flex-direction: column; justify-content: center; text-align: left; padding: 30px;">
+          <div class="label" style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px;">Join Address</div>
+          <div class="value" id="lobby-url" style="color: var(--purple-neon); font-size: 1.6rem; word-break: break-all; line-height: 1.3; font-weight: 800;">http://192.168.1.15:3000</div>
         </div>
-        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; gap: 8px;">
-          <div id="lobby-qr" style="background: white; padding: 6px; border-radius: 8px; box-shadow: var(--shadow-btn);"></div>
-          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Scan to Join</span>
+        <div class="lobby-card glass-panel" style="border-color: var(--purple-neon); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 30px; gap: 10px;">
+          <div id="lobby-qr" style="background: white; padding: 10px; border-radius: 12px; box-shadow: var(--shadow-btn); display: flex; align-items: center; justify-content: center;"></div>
+          <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Scan to Join</span>
         </div>
-        <div class="lobby-card glass-panel" style="border-color: var(--yellow-cir);">
-          <div class="label">Players joined</div>
-          <div class="value" id="lobby-player-count" style="color: var(--yellow-cir);">0</div>
+        <div class="lobby-card glass-panel" style="border-color: var(--yellow-cir); min-width: 240px; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+          <div class="label" style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px;">Players joined</div>
+          <div class="value" id="lobby-player-count" style="color: var(--yellow-cir); font-size: 3rem; font-weight: 900;">0</div>
         </div>
       </div>
 
