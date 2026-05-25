@@ -1,0 +1,8 @@
+Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer
+multiple-choice,"Which book of the Bible contains the longest chapter?",15,"Genesis","Psalms","Isaiah","Jeremiah","Psalms"
+true-false,"The Hebrew Bible contains exactly five scrolls collectively known as the Megillot.",15,"True","False",,,"True"
+short-answer,"According to Genesis, how many total years did Methuselah live?",25,,,,,"969"
+multiple-choice,"Who was the only female judge of Israel mentioned in the Old Testament?",15,"Ruth","Esther","Deborah","Jael","Deborah"
+short-answer,"How many total chapters are in the Book of Isaiah?",25,,,,,"66"
+true-false,"The Apostle John was exiled to the island of Patmos by the Roman Emperor Nero.",15,"True","False",,,"False"
+short-answer,"How many times did the Israelites march around the walls of Jericho on the seventh day?",20,,,,,"7"
