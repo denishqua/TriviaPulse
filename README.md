@@ -2,8 +2,6 @@
 
 A highly polished, premium local-multiplayer trivia game built with a modern **Cosmic Glassmorphism** design system. Host TriviaPulse locally on your computer, project the main dashboard, and let friends join instantly as controllers on their mobile devices, tablets, or laptops over the same Wi-Fi network!
 
-![TriviaPulse Lobby Mockup](triviapulse_lobby_mockup.png)
-
 ---
 
 ## 🚀 Key Features
