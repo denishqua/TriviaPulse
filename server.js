@@ -327,10 +327,10 @@ io.on('connection', (socket) => {
     const question = game.questions[game.currentQuestionIndex];
     const timeTaken = (Date.now() - game.questionStartTime) / 1000;
     
-    // Check correctness
+    // Check correctness (case-insensitive & strips leading/trailing spaces dynamically)
     let isCorrect = false;
-    const cleanAnswer = answer.toString().trim().toLowerCase();
-    const cleanCorrect = question.correctanswer.toString().trim().toLowerCase();
+    const cleanAnswer = (answer !== undefined && answer !== null) ? answer.toString().trim().toLowerCase() : '';
+    const cleanCorrect = (question.correctanswer !== undefined && question.correctanswer !== null) ? question.correctanswer.toString().trim().toLowerCase() : '';
 
     if (question.type === 'short-answer') {
       isCorrect = cleanAnswer === cleanCorrect;

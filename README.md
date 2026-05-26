@@ -45,21 +45,21 @@ node server.js --lan
 - **Projector View**: Go to `http://localhost:3000/host.html` on your computer.
 - **Player View**: Players go to the resolved LAN IP address displayed on the host screen (e.g. `http://192.168.10.59:3000`) or scan the large QR code.
 
-#### 💻 Mode B: Local-Only Mode
-Strictly binds to `127.0.0.1` (localhost). Perfect for private testing on a single computer using local tabs.
-```bash
-node server.js
-```
-- **Projector View**: Go to `http://localhost:3000/host.html`.
-- **Player View**: Go to `http://localhost:3000/` in an incognito tab.
-
-#### 🌍 Mode C: Internet / Public WAN Multiplayer (via Pinggy SSH Tunnel)
+#### 🌍 Mode B: Internet / Public WAN Multiplayer (via Pinggy SSH Tunnel)
 Allows players anywhere in the world to join your locally hosted session from any cellular connection or external Wi-Fi network! No complex network setup or port-forwarding needed.
 ```bash
 node server.js --tunnel
 ```
 - **Projector View**: Go to `http://localhost:3000/host.html`.
 - **Player View**: Once the tunnel establishes, the secure HTTPS URL (e.g. `https://xxxx.run.pinggy-free.link`) automatically resolves in the console. The host lobby card dynamically updates the join address and draws the large `200x200` scan-to-join QR code on-the-fly. Players just scan to play!
+
+#### 💻 Mode C: Local-Only Development Mode
+Strictly binds to `127.0.0.1` (localhost). Labeled as a developmental mode and put last. Perfect for private testing on a single computer using local tabs.
+```bash
+node server.js
+```
+- **Projector View**: Go to `http://localhost:3000/host.html`.
+- **Player View**: Go to `http://localhost:3000/` in an incognito tab.
 
 ---
 
@@ -100,15 +100,15 @@ Total Players: 4
 
 🏆 FINAL CHAMPIONS (PODIUM) 🏆
 ----------------------------------------------------
-1st Place 🥇: Alan - 6450 pts (Streak: 5)
-2nd Place 🥈: Denis - 5820 pts (Streak: 4)
-3rd Place 🥉: Sarah - 4100 pts (Streak: 2)
+1st Place 🥇: Sarah - 6450 pts (Streak: 5)
+2nd Place 🥈: Emma - 5820 pts (Streak: 4)
+3rd Place 🥉: David - 4100 pts (Streak: 2)
 
 FULL STANDINGS
 ----------------------------------------------------
-1. Alan - 6450 pts (Streak: 5)
-2. Denis - 5820 pts (Streak: 4)
-3. Sarah - 4100 pts (Streak: 2)
+1. Sarah - 6450 pts (Streak: 5)
+2. Emma - 5820 pts (Streak: 4)
+3. David - 4100 pts (Streak: 2)
 4. John - 2500 pts (Streak: 1)
 ====================================================
 ```
