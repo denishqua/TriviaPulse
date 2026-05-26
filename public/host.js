@@ -164,18 +164,54 @@ socket.on('tunnel-url-updated', (data) => {
   }
 });
 
+function renderLobbyPlayers(players) {
+  lobbyPlayersGrid.innerHTML = '';
+  players.forEach(nickname => {
+    const bubble = document.createElement('div');
+    bubble.className = 'player-bubble';
+    bubble.style.position = 'relative';
+    bubble.style.cursor = 'pointer';
+    bubble.style.paddingRight = '35px'; // Leave space for kick cross button
+    
+    // Create text element
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = nickname;
+    bubble.appendChild(nameSpan);
+    
+    // Create kick cross button (styled beautifully)
+    const kickBtn = document.createElement('span');
+    kickBtn.innerHTML = ' &times;';
+    kickBtn.style.color = 'var(--red-tri)';
+    kickBtn.style.fontWeight = 'bold';
+    kickBtn.style.fontSize = '1.3rem';
+    kickBtn.style.position = 'absolute';
+    kickBtn.style.right = '12px';
+    kickBtn.style.top = '50%';
+    kickBtn.style.transform = 'translateY(-55%)';
+    kickBtn.style.cursor = 'pointer';
+    kickBtn.style.transition = 'transform 0.2s';
+    
+    kickBtn.addEventListener('mouseenter', () => { kickBtn.style.transform = 'translateY(-55%) scale(1.3)'; });
+    kickBtn.addEventListener('mouseleave', () => { kickBtn.style.transform = 'translateY(-55%) scale(1)'; });
+    
+    bubble.appendChild(kickBtn);
+    
+    // Clicking the bubble triggers the kick confirmation dialog
+    bubble.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm(`Remove player "${nickname}" from the lobby?`)) {
+        socket.emit('host-kick-player', { nickname });
+      }
+    });
+    
+    lobbyPlayersGrid.appendChild(bubble);
+  });
+}
+
 // Event: New Player Joins Lobby
 socket.on('player-joined', (data) => {
   lobbyPlayerCount.textContent = data.playerCount;
-  
-  // Render player name bubbles
-  lobbyPlayersGrid.innerHTML = '';
-  data.players.forEach(nickname => {
-    const bubble = document.createElement('div');
-    bubble.className = 'player-bubble';
-    bubble.textContent = nickname;
-    lobbyPlayersGrid.appendChild(bubble);
-  });
+  renderLobbyPlayers(data.players);
 
   if (data.playerCount > 0) {
     btnStartGame.style.display = 'inline-block';
@@ -187,14 +223,7 @@ socket.on('player-joined', (data) => {
 // Event: Player Leaves Lobby
 socket.on('player-left', (data) => {
   lobbyPlayerCount.textContent = data.playerCount;
-  
-  lobbyPlayersGrid.innerHTML = '';
-  data.players.forEach(nickname => {
-    const bubble = document.createElement('div');
-    bubble.className = 'player-bubble';
-    bubble.textContent = nickname;
-    lobbyPlayersGrid.appendChild(bubble);
-  });
+  renderLobbyPlayers(data.players);
 
   if (data.playerCount > 0) {
     btnStartGame.style.display = 'inline-block';

@@ -167,6 +167,12 @@ socket.on('host-disconnected', () => {
   window.location.reload();
 });
 
+// Clean up if player gets kicked
+socket.on('kicked', (data) => {
+  alert(data.message || 'You have been removed from the lobby by the host.');
+  window.location.reload();
+});
+
 // Helper: Show/Hide panels
 function showPanel(panelToShow) {
   [

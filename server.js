@@ -210,6 +210,49 @@ io.on('connection', (socket) => {
     startQuestionIntro(game);
   });
 
+  // Host removes/kicks player from lobby
+  socket.on('host-kick-player', ({ nickname }) => {
+    const pin = 'local_game';
+    const game = games.get(pin);
+    if (!game || game.hostSocketId !== socket.id) return;
+    if (game.gameState !== 'LOBBY') return; // Kick only allowed during lobby setup
+    
+    // Find the player by nickname
+    let targetSocketId = null;
+    for (const [sId, player] of game.players.entries()) {
+      if (player.nickname.toLowerCase() === nickname.toLowerCase().trim()) {
+        targetSocketId = sId;
+        break;
+      }
+    }
+    
+    if (targetSocketId) {
+      const playerDetails = game.players.get(targetSocketId);
+      
+      // Notify player client they have been kicked
+      io.to(targetSocketId).emit('kicked', { message: 'You have been removed from the lobby by the host.' });
+      
+      // Remove player details from session
+      game.players.delete(targetSocketId);
+      game.answeredThisQuestion.delete(targetSocketId);
+      
+      // Clean up player socket
+      const targetSocket = io.sockets.sockets.get(targetSocketId);
+      if (targetSocket) {
+        targetSocket.leave(`game_${pin}`);
+      }
+      
+      console.log(`Player ${playerDetails.nickname} was kicked from the lobby by Host.`);
+      
+      // Broadcast updated list to Host
+      io.to(game.hostSocketId).emit('player-left', {
+        nickname: playerDetails.nickname,
+        playerCount: game.players.size,
+        players: Array.from(game.players.values()).map(p => p.nickname)
+      });
+    }
+  });
+
   // Host triggers showing results (ends question early)
   socket.on('host-show-results', () => {
     const pin = 'local_game';
