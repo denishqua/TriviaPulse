@@ -71,7 +71,7 @@ Adding your own trivia sheets is incredibly simple:
 1. Create a `.csv` file inside the `quizzes/` directory (e.g. `quizzes/my_awesome_quiz.csv`).
 2. Follow this standard header template:
    ```csv
-   Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer
+   Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer,QuestionImage,OptionAImage,OptionBImage,OptionCImage,OptionDImage
    ```
 3. Save the file. When you refresh the host setup page, your new quiz will automatically populate in the selection dropdown!
 
@@ -79,6 +79,16 @@ Adding your own trivia sheets is incredibly simple:
 - **Multiple Choice**: Set `Type` to `multiple-choice`, supply 4 options, and provide the correct option text in `CorrectAnswer`.
 - **True/False**: Set `Type` to `true-false`, set `OptionA` to `"True"`, `OptionB` to `"False"`, leave C and D blank, and write `"True"` or `"False"` in `CorrectAnswer`.
 - **Short Answer / Fill-in-the-Blank**: Set `Type` to `short-answer`, leave options A through D blank, and write the exact text (or numerical value) to match case-insensitively in `CorrectAnswer`.
+
+### 🖼️ Adding Question & Option Photos
+
+TriviaPulse supports dynamic high-fidelity pictures for both the question board and player controller answer buttons!
+
+- **Local Images (Recommended)**: Create a folder inside `public/`, e.g., `public/images/`. Put your image files (PNG, JPG, SVG, WebP) in it and write the relative path in the CSV cell:
+  `images/my_quiz/mars.jpg`
+  *(Note: Since the server serves the `public/` directory statically, any player device joining over Wi-Fi or tunnel will automatically resolve and render the local image!)*
+- **Internet URLs**: Paste any direct, secure image link starting with `http://` or `https://` (e.g. `https://images.unsplash.com/...`).
+- **Base64 Embedded Images**: You can paste an inline Base64 data URL directly into the CSV cell (e.g. `data:image/png;base64,...`), allowing zero-file packaging.
 
 ---
 
