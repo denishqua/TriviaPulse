@@ -523,6 +523,51 @@ socket.on('state-changed', (data) => {
 
     resultsChart.innerHTML = '';
 
+    // Dynamic Sizing calculations based on options count
+    let optCount = 2;
+    if (currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'survey') {
+      optCount = currentQuestion.options.length;
+    } else if (currentQuestion.type === 'true-false') {
+      optCount = 2;
+    }
+
+    let wrapperWidth = '120px';
+    let imgSize = '76px';
+    let countFontSize = '1.2rem';
+    let labelFontSize = '0.85rem';
+    let countTop = '-30px';
+    let gap = '20px';
+    let chartContainerPadding = '0 40px';
+
+    if (optCount > 12) {
+      wrapperWidth = `${Math.floor((1000 - 30) / optCount) - 6}px`; // around 42px for 20 options
+      imgSize = '36px'; // smaller images for XL layouts to prevent overflow
+      countFontSize = '0.8rem';
+      labelFontSize = '0.65rem';
+      countTop = '-22px';
+      gap = '4px';
+      chartContainerPadding = '0 15px'; // Less padding inside the chart container
+    } else if (optCount > 8) {
+      wrapperWidth = '70px';
+      imgSize = '50px';
+      countFontSize = '0.95rem';
+      labelFontSize = '0.75rem';
+      countTop = '-26px';
+      gap = '10px';
+      chartContainerPadding = '0 25px';
+    } else if (optCount > 4) {
+      wrapperWidth = '95px';
+      imgSize = '64px';
+      countFontSize = '1.1rem';
+      labelFontSize = '0.8rem';
+      countTop = '-28px';
+      gap = '16px';
+    }
+
+    resultsChart.style.gap = gap;
+    resultsChart.style.justifyContent = 'center';
+    resultsChart.style.padding = chartContainerPadding;
+
     if (currentQuestion.type === 'short-answer') {
       resultsChart.style.display = 'flex';
       
@@ -534,6 +579,7 @@ socket.on('state-changed', (data) => {
       saConfig.forEach(cfg => {
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
+        barWrapper.style.width = wrapperWidth;
         
         const bar = document.createElement('div');
         bar.className = `chart-bar ${cfg.color}`;
@@ -542,6 +588,8 @@ socket.on('state-changed', (data) => {
         
         const countLabel = document.createElement('span');
         countLabel.className = 'count-label';
+        countLabel.style.fontSize = countFontSize;
+        countLabel.style.top = countTop;
         countLabel.textContent = `${cfg.count} (${getPercent(cfg.count)})`;
         bar.appendChild(countLabel);
         
@@ -569,9 +617,9 @@ socket.on('state-changed', (data) => {
         labelDiv.appendChild(shapeIcon);
         
         const textSpan = document.createElement('span');
-        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontSize = labelFontSize;
         textSpan.style.fontWeight = '700';
-        textSpan.style.maxWidth = '130px';
+        textSpan.style.maxWidth = wrapperWidth;
         textSpan.style.overflow = 'hidden';
         textSpan.style.textOverflow = 'ellipsis';
         textSpan.style.whiteSpace = 'nowrap';
@@ -594,6 +642,7 @@ socket.on('state-changed', (data) => {
       tfConfig.forEach(cfg => {
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
+        barWrapper.style.width = wrapperWidth;
         
         const bar = document.createElement('div');
         bar.className = `chart-bar ${cfg.color}`;
@@ -602,6 +651,8 @@ socket.on('state-changed', (data) => {
         
         const countLabel = document.createElement('span');
         countLabel.className = 'count-label';
+        countLabel.style.fontSize = countFontSize;
+        countLabel.style.top = countTop;
         countLabel.textContent = `${cfg.count} (${getPercent(cfg.count)})`;
         bar.appendChild(countLabel);
         
@@ -618,13 +669,13 @@ socket.on('state-changed', (data) => {
         if (cfg.img) {
           const img = document.createElement('img');
           img.src = cfg.img;
-          img.style.width = '76px';
-          img.style.height = '76px';
+          img.style.width = imgSize;
+          img.style.height = imgSize;
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
-          img.style.padding = '2px';
+          img.style.padding = optCount > 12 ? '1px' : '2px';
           labelDiv.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');
@@ -642,9 +693,9 @@ socket.on('state-changed', (data) => {
         }
         
         const textSpan = document.createElement('span');
-        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontSize = labelFontSize;
         textSpan.style.fontWeight = '700';
-        textSpan.style.maxWidth = '130px';
+        textSpan.style.maxWidth = wrapperWidth;
         textSpan.style.overflow = 'hidden';
         textSpan.style.textOverflow = 'ellipsis';
         textSpan.style.whiteSpace = 'nowrap';
@@ -670,6 +721,7 @@ socket.on('state-changed', (data) => {
         
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
+        barWrapper.style.width = wrapperWidth;
         
         const bar = document.createElement('div');
         bar.className = `chart-bar ${color}`;
@@ -678,6 +730,8 @@ socket.on('state-changed', (data) => {
         
         const countLabel = document.createElement('span');
         countLabel.className = 'count-label';
+        countLabel.style.fontSize = countFontSize;
+        countLabel.style.top = countTop;
         countLabel.textContent = `${count} (${getPercent(count)})`;
         bar.appendChild(countLabel);
         
@@ -694,13 +748,13 @@ socket.on('state-changed', (data) => {
         if (optImg) {
           const img = document.createElement('img');
           img.src = optImg;
-          img.style.width = '76px';
-          img.style.height = '76px';
+          img.style.width = imgSize;
+          img.style.height = imgSize;
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
-          img.style.padding = '2px';
+          img.style.padding = optCount > 12 ? '1px' : '2px';
           labelDiv.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');
@@ -718,9 +772,9 @@ socket.on('state-changed', (data) => {
         }
         
         const textSpan = document.createElement('span');
-        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontSize = labelFontSize;
         textSpan.style.fontWeight = '700';
-        textSpan.style.maxWidth = '130px';
+        textSpan.style.maxWidth = wrapperWidth;
         textSpan.style.overflow = 'hidden';
         textSpan.style.textOverflow = 'ellipsis';
         textSpan.style.whiteSpace = 'nowrap';
@@ -753,6 +807,7 @@ socket.on('state-changed', (data) => {
       mappedOptions.forEach(opt => {
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
+        barWrapper.style.width = wrapperWidth;
         
         const bar = document.createElement('div');
         bar.className = `chart-bar ${opt.color}`;
@@ -761,6 +816,8 @@ socket.on('state-changed', (data) => {
         
         const countLabel = document.createElement('span');
         countLabel.className = 'count-label';
+        countLabel.style.fontSize = countFontSize;
+        countLabel.style.top = countTop;
         countLabel.textContent = `${opt.count} (${getPercent(opt.count)})`;
         bar.appendChild(countLabel);
         
@@ -777,13 +834,13 @@ socket.on('state-changed', (data) => {
         if (opt.img) {
           const img = document.createElement('img');
           img.src = opt.img;
-          img.style.width = '76px';
-          img.style.height = '76px';
+          img.style.width = imgSize;
+          img.style.height = imgSize;
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
-          img.style.padding = '2px';
+          img.style.padding = optCount > 12 ? '1px' : '2px';
           labelDiv.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');
@@ -801,9 +858,9 @@ socket.on('state-changed', (data) => {
         }
         
         const textSpan = document.createElement('span');
-        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontSize = labelFontSize;
         textSpan.style.fontWeight = '700';
-        textSpan.style.maxWidth = '130px';
+        textSpan.style.maxWidth = wrapperWidth;
         textSpan.style.overflow = 'hidden';
         textSpan.style.textOverflow = 'ellipsis';
         textSpan.style.whiteSpace = 'nowrap';
