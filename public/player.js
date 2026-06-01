@@ -184,8 +184,9 @@ socket.on('state-changed', (data) => {
         surveyVotesCount.textContent = maxVotes;
         
         // Setup cloned submit button to clear previous listeners
-        const submitBtn = btnSubmitSurveyVotes.cloneNode(true);
-        btnSubmitSurveyVotes.parentNode.replaceChild(submitBtn, btnSubmitSurveyVotes);
+        const currentSubmitBtn = document.getElementById('btn-submit-survey-votes');
+        const submitBtn = currentSubmitBtn.cloneNode(true);
+        currentSubmitBtn.parentNode.replaceChild(submitBtn, currentSubmitBtn);
         submitBtn.style.display = 'block';
         submitBtn.disabled = true; // Disabled initially
         submitBtn.style.background = 'rgba(255, 255, 255, 0.05)';
@@ -194,7 +195,8 @@ socket.on('state-changed', (data) => {
         submitBtn.style.boxShadow = 'none';
       } else {
         surveyVotesHeader.style.display = 'none';
-        btnSubmitSurveyVotes.style.display = 'none';
+        const currentSubmitBtn = document.getElementById('btn-submit-survey-votes');
+        if (currentSubmitBtn) currentSubmitBtn.style.display = 'none';
       }
 
       const optCount = data.question.options.length;
