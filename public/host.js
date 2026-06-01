@@ -330,9 +330,9 @@ socket.on('state-changed', (data) => {
     }
 
     const typeLabels = {
-      'multiple-choice': 'Multiple Choice 📝',
-      'true-false': 'True / False ⚖️',
-      'short-answer': 'Short Answer ✍️'
+      'multiple-choice': 'Multiple Choice',
+      'true-false': 'True / False',
+      'short-answer': 'Short Answer'
     };
     document.getElementById('intro-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
     
@@ -370,9 +370,9 @@ socket.on('state-changed', (data) => {
     }
 
     const typeLabels = {
-      'multiple-choice': 'Multiple Choice 📝',
-      'true-false': 'True / False ⚖️',
-      'short-answer': 'Short Answer ✍️'
+      'multiple-choice': 'Multiple Choice',
+      'true-false': 'True / False',
+      'short-answer': 'Short Answer'
     };
     document.getElementById('question-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
     
