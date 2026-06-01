@@ -25,6 +25,7 @@ const lobbyPin = document.getElementById('lobby-pin');
 const lobbyPlayerCount = document.getElementById('lobby-player-count');
 const lobbyPlayersGrid = document.getElementById('lobby-players-grid');
 const btnStartGame = document.getElementById('btn-start-game');
+const btnEnableTunnel = document.getElementById('btn-enable-tunnel');
 
 const introQIndex = document.getElementById('intro-q-index');
 const introQTitle = document.getElementById('intro-q-title');
@@ -109,13 +110,31 @@ socket.on('game-created', (data) => {
   let joinUrlText;
   let shouldRenderQR = true;
   
-  if (data.localIp.startsWith('http://') || data.localIp.startsWith('https://')) {
+  // If the lobby is loaded with a tunnel url already resolved
+  const isTunnelUrl = data.localIp.startsWith('http://') || data.localIp.startsWith('https://');
+
+  if (isTunnelUrl) {
     joinUrlText = data.localIp;
+    if (btnEnableTunnel) {
+      btnEnableTunnel.disabled = true;
+      btnEnableTunnel.textContent = '🌐 Remote Play Enabled';
+      btnEnableTunnel.style.background = 'linear-gradient(135deg, var(--green-squ), #10b981)';
+    }
   } else if (data.localIp === 'Generating tunnel...') {
     joinUrlText = 'Generating tunnel...';
     shouldRenderQR = false;
+    if (btnEnableTunnel) {
+      btnEnableTunnel.disabled = true;
+      btnEnableTunnel.textContent = '🌐 Starting Remote Play...';
+      btnEnableTunnel.style.background = 'rgba(255, 255, 255, 0.1)';
+    }
   } else {
     joinUrlText = `http://${data.localIp}:${data.port}`;
+    if (btnEnableTunnel) {
+      btnEnableTunnel.disabled = false;
+      btnEnableTunnel.textContent = '🌐 Enable Remote Play';
+      btnEnableTunnel.style.background = 'linear-gradient(135deg, var(--purple-neon), var(--pink-neon))';
+    }
   }
   
   lobbyUrl.textContent = joinUrlText;
@@ -149,6 +168,12 @@ socket.on('game-created', (data) => {
 socket.on('tunnel-url-updated', (data) => {
   console.log('Tunnel URL received:', data.url);
   lobbyUrl.textContent = data.url;
+
+  if (btnEnableTunnel) {
+    btnEnableTunnel.disabled = true;
+    btnEnableTunnel.textContent = '🌐 Remote Play Enabled';
+    btnEnableTunnel.style.background = 'linear-gradient(135deg, var(--green-squ), #10b981)';
+  }
   
   const qrContainer = document.getElementById('lobby-qr');
   if (qrContainer) {
@@ -238,6 +263,16 @@ btnStartGame.addEventListener('click', () => {
     socket.emit('host-start-game', { pin: currentPin });
   }
 });
+
+// Event: Enable Tunnel Click
+if (btnEnableTunnel) {
+  btnEnableTunnel.addEventListener('click', () => {
+    btnEnableTunnel.disabled = true;
+    btnEnableTunnel.textContent = '🌐 Starting Remote Play...';
+    btnEnableTunnel.style.background = 'rgba(255, 255, 255, 0.1)';
+    socket.emit('host-start-tunnel');
+  });
+}
 
 // Event: Skip Timer Click
 btnShowResults.addEventListener('click', () => {

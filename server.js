@@ -253,6 +253,20 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Host requests to dynamically spawn remote play tunnel
+  socket.on('host-start-tunnel', () => {
+    // If already active or starting, return immediate URL if present
+    if (tunnelProcess) {
+      if (publicTunnelUrl) {
+        socket.emit('tunnel-url-updated', { url: publicTunnelUrl });
+      }
+      return;
+    }
+    
+    console.log('Host requested remote play tunnel. Spawning Pinggy SSH background process...');
+    startPinggyTunnel();
+  });
+
   // Host triggers showing results (ends question early)
   socket.on('host-show-results', () => {
     const pin = 'local_game';
