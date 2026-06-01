@@ -863,20 +863,19 @@ function savePodiumResults(game) {
 
 function showFinalPodium(game) {
   game.gameState = 'PODIUM';
-  // Build podium — include all players tied at each rank position
   const fullLeaderboard = getLeaderboard(game);
   const podium = [];
-  let rank = 1;
+  let place = 1;
   let i = 0;
-  while (i < fullLeaderboard.length && rank <= 3) {
+  while (i < fullLeaderboard.length && place <= 3) {
     const currentScore = fullLeaderboard[i].score;
     const tied = [];
     while (i < fullLeaderboard.length && fullLeaderboard[i].score === currentScore) {
       tied.push(fullLeaderboard[i]);
       i++;
     }
-    podium.push({ rank, players: tied, score: currentScore });
-    rank += tied.length;
+    podium.push({ rank: place, players: tied, score: currentScore });
+    place++;
   }
   
   // Save podium results persistently
