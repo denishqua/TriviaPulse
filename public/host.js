@@ -372,14 +372,15 @@ socket.on('state-changed', (data) => {
     const typeLabels = {
       'multiple-choice': 'Multiple Choice',
       'true-false': 'True / False',
-      'short-answer': 'Short Answer'
+      'short-answer': 'Short Answer',
+      'survey': 'Opinion Survey 🗳️'
     };
     document.getElementById('question-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
     
     // Check question type to render answers layout dynamically
     questionAnswersGrid.innerHTML = '';
     
-    if (currentQuestion.type === 'multiple-choice') {
+    if (currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'survey') {
       questionAnswersGrid.style.display = 'grid';
       const optCount = currentQuestion.options.length;
       if (optCount <= 4) {
