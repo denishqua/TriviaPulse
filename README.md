@@ -53,6 +53,8 @@ node server.js --tunnel
 - **Projector View**: Go to `http://localhost:3000/host.html`.
 - **Player View**: Once the tunnel establishes, the secure HTTPS URL (e.g. `https://xxxx.run.pinggy-free.link`) automatically resolves in the console. The host lobby card dynamically updates the join address and draws the large `200x200` scan-to-join QR code on-the-fly. Players just scan to play!
 
+*(Note: You can also start the server in LAN mode (Mode A) and activate the tunnel dynamically from the Host Lobby screen simply by clicking the **🌐 Enable Remote Play** button!)*
+
 #### 💻 Mode C: Local-Only Development Mode
 Strictly binds to `127.0.0.1` (localhost). Labeled as a developmental mode and put last. Perfect for private testing on a single computer using local tabs.
 ```bash
