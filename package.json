@@ -16,5 +16,8 @@
     "node": ">=16.0.0"
   },
   "author": "Antigravity",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
 }
