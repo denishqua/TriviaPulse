@@ -139,14 +139,18 @@ socket.on('state-changed', (data) => {
         btn.style.flexDirection = 'column';
         btn.style.alignItems = 'center';
         btn.style.justifyContent = 'center';
-        btn.style.gap = '10px';
         
         if (optImgs[idx]) {
+          btn.style.padding = '4px';
+          btn.style.gap = '0px';
+          
           const img = document.createElement('img');
           img.className = 'player-opt-img';
           img.src = optImgs[idx];
-          img.style.width = '96px';
-          img.style.height = '96px';
+          img.style.width = '90%';
+          img.style.height = '90%';
+          img.style.maxWidth = '92%';
+          img.style.maxHeight = '92%';
           img.style.objectFit = 'contain';
           img.style.borderRadius = '12px';
           img.style.border = '2px solid rgba(255,255,255,0.45)';
@@ -154,6 +158,8 @@ socket.on('state-changed', (data) => {
           img.style.padding = '4px';
           btn.appendChild(img);
         } else {
+          btn.style.padding = '10px';
+          btn.style.gap = '10px';
           const shapeDiv = document.createElement('div');
           shapeDiv.className = `shape-${shape}`;
           btn.appendChild(shapeDiv);
@@ -181,8 +187,8 @@ socket.on('state-changed', (data) => {
         if (optImgs[0]) {
           imgTrue.src = optImgs[0];
           imgTrue.style.display = 'block';
-          imgTrue.style.width = '64px';
-          imgTrue.style.height = '64px';
+          imgTrue.style.width = '90px';
+          imgTrue.style.height = '90px';
           imgTrue.style.objectFit = 'contain';
           imgTrue.style.borderRadius = '8px';
           imgTrue.style.border = '1.5px solid rgba(255,255,255,0.3)';
@@ -199,8 +205,8 @@ socket.on('state-changed', (data) => {
         if (optImgs[1]) {
           imgFalse.src = optImgs[1];
           imgFalse.style.display = 'block';
-          imgFalse.style.width = '64px';
-          imgFalse.style.height = '64px';
+          imgFalse.style.width = '90px';
+          imgFalse.style.height = '90px';
           imgFalse.style.objectFit = 'contain';
           imgFalse.style.borderRadius = '8px';
           imgFalse.style.border = '1.5px solid rgba(255,255,255,0.3)';

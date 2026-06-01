@@ -566,8 +566,8 @@ socket.on('state-changed', (data) => {
       resultsChart.style.display = 'flex';
       
       const tfConfig = [
-        { text: 'True', color: 'blue', shape: 'dia', count: stats[0] || 0 },
-        { text: 'False', color: 'red', shape: 'tri', count: stats[1] || 0 }
+        { text: 'True', color: 'blue', shape: 'dia', count: stats[0] || 0, img: (currentQuestion.optionImages && currentQuestion.optionImages[0]) || '' },
+        { text: 'False', color: 'red', shape: 'tri', count: stats[1] || 0, img: (currentQuestion.optionImages && currentQuestion.optionImages[1]) || '' }
       ];
       
       tfConfig.forEach(cfg => {
@@ -597,8 +597,8 @@ socket.on('state-changed', (data) => {
         if (cfg.img) {
           const img = document.createElement('img');
           img.src = cfg.img;
-          img.style.width = '64px';
-          img.style.height = '64px';
+          img.style.width = '76px';
+          img.style.height = '76px';
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';
@@ -673,8 +673,8 @@ socket.on('state-changed', (data) => {
         if (optImg) {
           const img = document.createElement('img');
           img.src = optImg;
-          img.style.width = '64px';
-          img.style.height = '64px';
+          img.style.width = '76px';
+          img.style.height = '76px';
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';

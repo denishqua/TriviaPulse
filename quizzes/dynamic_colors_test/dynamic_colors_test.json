@@ -47,12 +47,14 @@
     "type": "true-false",
     "question": "TriviaPulse supports up to 20 multiple choice answer options dynamically.",
     "timeLimit": 15,
+    "questionImage": "quizzes/dynamic_colors_test/earth.svg",
     "correctAnswer": "True"
   },
   {
     "type": "short-answer",
     "question": "What is the capital city of France?",
     "timeLimit": 20,
+    "questionImage": "quizzes/dynamic_colors_test/saturn.svg",
     "correctAnswer": "Paris"
   }
 ]
