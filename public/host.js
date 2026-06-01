@@ -322,7 +322,7 @@ socket.on('state-changed', (data) => {
     if (introImageContainer && introImage) {
       if (currentQuestion.questionImage) {
         introImage.src = currentQuestion.questionImage;
-        introImageContainer.style.display = 'block';
+        introImageContainer.style.display = 'flex';
       } else {
         introImage.src = '';
         introImageContainer.style.display = 'none';
@@ -362,7 +362,7 @@ socket.on('state-changed', (data) => {
     if (questionImageContainer && questionImage) {
       if (currentQuestion.questionImage) {
         questionImage.src = currentQuestion.questionImage;
-        questionImageContainer.style.display = 'block';
+        questionImageContainer.style.display = 'flex';
       } else {
         questionImage.src = '';
         questionImageContainer.style.display = 'none';
