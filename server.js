@@ -92,15 +92,18 @@ app.get('/api/quizzes', (req, res) => {
       return res.status(500).json({ error: 'Failed to read quizzes directory' });
     }
     
-    const csvFiles = files
-      .filter(file => file.endsWith('.csv'))
-      .map(file => ({
-        id: file,
-        name: path.basename(file, '.csv').replace(/_/g, ' ').toUpperCase()
-      }));
+    const quizFiles = files
+      .filter(file => file.endsWith('.csv') || file.endsWith('.json'))
+      .map(file => {
+        const ext = path.extname(file);
+        return {
+          id: file,
+          name: path.basename(file, ext).replace(/_/g, ' ').toUpperCase()
+        };
+      });
       
     const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
-    res.json({ quizzes: csvFiles, localIp: resolvedIp, port: PORT });
+    res.json({ quizzes: quizFiles, localIp: resolvedIp, port: PORT });
   });
 });
 
@@ -121,33 +124,97 @@ io.on('connection', (socket) => {
     }
 
     try {
-      const csvData = fs.readFileSync(quizPath, 'utf-8');
-      const rows = parseCSV(csvData);
-      
-      // Parse header and rows
-      if (rows.length < 2) {
-        return socket.emit('error-msg', { message: 'Quiz CSV file is empty or invalid.' });
-      }
-
-      const headers = rows[0].map(h => h.trim().toLowerCase());
+      const fileData = fs.readFileSync(quizPath, 'utf-8');
       const questions = [];
+      const isJson = quizId.endsWith('.json');
 
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.length < 2 || !row[0]) continue; // Skip empty rows
+      if (isJson) {
+        const parsedJson = JSON.parse(fileData);
+        if (!Array.isArray(parsedJson)) {
+          return socket.emit('error-msg', { message: 'JSON Quiz must be an array of questions.' });
+        }
+        for (const item of parsedJson) {
+          const q = {
+            type: item.type || 'multiple-choice',
+            question: item.question || '',
+            timeLimit: parseInt(item.timeLimit) || parseInt(item.timelimit) || 20,
+            questionimage: item.questionImage || item.questionimage || '',
+            correctanswer: item.correctAnswer || item.correctanswer || '',
+            options: [],
+            optionImages: []
+          };
 
-        const q = {};
-        headers.forEach((header, index) => {
-          q[header] = row[index] ? row[index].trim() : '';
-        });
+          // If options is an array
+          if (Array.isArray(item.options)) {
+            item.options.forEach((opt, oIdx) => {
+              if (typeof opt === 'object' && opt !== null) {
+                q.options.push(opt.text || '');
+                q.optionImages.push(opt.image || '');
+              } else {
+                q.options.push(opt ? opt.toString() : '');
+                // Try fetching matching index in item.optionImages or item.optionimages array if present
+                const imgArr = item.optionImages || item.optionimages;
+                q.optionImages.push((Array.isArray(imgArr) && imgArr[oIdx]) ? imgArr[oIdx] : '');
+              }
+            });
+          }
+          questions.push(q);
+        }
+      } else {
+        const rows = parseCSV(fileData);
+        
+        // Parse header and rows
+        if (rows.length < 2) {
+          return socket.emit('error-msg', { message: 'Quiz CSV file is empty or invalid.' });
+        }
 
-        // Parse list details
-        q.timeLimit = parseInt(q.timelimit) || 20; // Default 20 seconds
-        questions.push(q);
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (row.length < 2 || !row[0]) continue; // Skip empty rows
+
+          const q = {};
+          headers.forEach((header, index) => {
+            q[header] = row[index] ? row[index].trim() : '';
+          });
+
+          // Dynamic options extraction (supports Option1 to Option20 and OptionA to OptionD)
+          const optionsList = [];
+          const optionImagesList = [];
+
+          for (let j = 1; j <= 20; j++) {
+            const optVal = q[`option${j}`];
+            if (optVal !== undefined && optVal !== '') {
+              optionsList.push(optVal);
+              optionImagesList.push(q[`option${j}image`] || '');
+            }
+          }
+
+          if (optionsList.length === 0) {
+            ['a', 'b', 'c', 'd'].forEach(char => {
+              const optVal = q[`option${char}`];
+              if (optVal !== undefined && optVal !== '') {
+                optionsList.push(optVal);
+                optionImagesList.push(q[`option${char}image`] || '');
+              }
+            });
+          }
+
+          q.options = optionsList;
+          q.optionImages = optionImagesList;
+          q.type = q.type || 'multiple-choice';
+          q.questionimage = q.questionimage || '';
+          q.correctanswer = q.correctanswer || '';
+
+          // Parse list details
+          q.timeLimit = parseInt(q.timelimit) || 20; // Default 20 seconds
+          questions.push(q);
+        }
       }
 
       if (questions.length === 0) {
-        return socket.emit('error-msg', { message: 'No valid questions found in CSV.' });
+        return socket.emit('error-msg', { message: 'No valid questions found in quiz file.' });
       }
 
       const pin = 'local_game';
@@ -159,11 +226,14 @@ io.on('connection', (socket) => {
         if (oldGame.countdownTimer) clearInterval(oldGame.countdownTimer);
       }
 
+      const ext = path.extname(quizId);
+      const quizName = path.basename(quizId, ext).replace(/_/g, ' ').toUpperCase();
+
       // Register game session
       const newGame = {
         pin,
         hostSocketId: socket.id,
-        quizName: path.basename(quizId, '.csv').replace(/_/g, ' ').toUpperCase(),
+        quizName,
         questions,
         players: new Map(), // socketId -> playerDetails
         gameState: 'LOBBY',
@@ -392,17 +462,24 @@ io.on('connection', (socket) => {
     if (question.type === 'short-answer') {
       isCorrect = cleanAnswer === cleanCorrect;
     } else {
-      // Maps option index (A, B, C, D) to text representation
       let selectedText = '';
-      if (cleanAnswer === 'a') selectedText = question.optiona;
-      else if (cleanAnswer === 'b') selectedText = question.optionb;
-      else if (cleanAnswer === 'c') selectedText = question.optionc;
-      else if (cleanAnswer === 'd') selectedText = question.optiond;
+      
+      // Try treating cleanAnswer as a 0-based index
+      const numericIndex = parseInt(cleanAnswer, 10);
+      if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < question.options.length) {
+        selectedText = question.options[numericIndex];
+      } else {
+        // Try treating cleanAnswer as a character code 'a'..'t' (charCode of 'a' is 97)
+        const charCode = cleanAnswer.charCodeAt(0) - 97;
+        if (cleanAnswer.length === 1 && charCode >= 0 && charCode < question.options.length) {
+          selectedText = question.options[charCode];
+        }
+      }
 
       if (selectedText) {
         isCorrect = selectedText.trim().toLowerCase() === cleanCorrect;
       } else {
-        // Fallback for direct match
+        // Fallback for direct match of text
         isCorrect = cleanAnswer === cleanCorrect;
       }
     }
@@ -524,18 +601,8 @@ function startQuestionIntro(game) {
     type: question.type,
     timeLimit: question.timeLimit,
     questionImage: question.questionimage || '',
-    optionImages: {
-      A: question.optionaimage || '',
-      B: question.optionbimage || '',
-      C: question.optioncimage || '',
-      D: question.optiondimage || ''
-    },
-    options: {
-      A: question.optiona,
-      B: question.optionb,
-      C: question.optionc,
-      D: question.optiond
-    }
+    optionImages: question.optionImages || [],
+    options: question.options || []
   };
 
   io.to(`game_${game.pin}`).emit('state-changed', {
@@ -584,18 +651,38 @@ function endQuestion(game) {
   game.gameState = 'RESULTS';
   const question = game.questions[game.currentQuestionIndex];
 
-  // Calculate statistics for multiple choice and true-false
-  const stats = { A: 0, B: 0, C: 0, D: 0, shortAnswerMatches: 0, shortAnswerWrong: 0 };
+  // Calculate statistics for multiple choice and true-false dynamically
+  let stats;
+  if (question.type === 'multiple-choice' || question.type === 'true-false') {
+    stats = new Array(question.options.length).fill(0);
+  } else {
+    stats = { shortAnswerMatches: 0, shortAnswerWrong: 0 };
+  }
   
   for (const player of game.players.values()) {
     const playerAnswer = player.answers[game.currentQuestionIndex];
     if (playerAnswer) {
       if (question.type === 'multiple-choice' || question.type === 'true-false') {
-        const choice = playerAnswer.answer.toUpperCase();
-        if (choice === 'A' || choice === question.optiona) stats.A++;
-        else if (choice === 'B' || choice === question.optionb) stats.B++;
-        else if (choice === 'C' || choice === question.optionc) stats.C++;
-        else if (choice === 'D' || choice === question.optiond) stats.D++;
+        const choice = playerAnswer.answer.toString().trim().toLowerCase();
+        let selectedIndex = -1;
+        
+        // Match index or char code
+        const numericIndex = parseInt(choice, 10);
+        if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < question.options.length) {
+          selectedIndex = numericIndex;
+        } else {
+          const charCode = choice.charCodeAt(0) - 97;
+          if (choice.length === 1 && charCode >= 0 && charCode < question.options.length) {
+            selectedIndex = charCode;
+          } else {
+            // Find option text index
+            selectedIndex = question.options.findIndex(opt => opt.trim().toLowerCase() === choice);
+          }
+        }
+        
+        if (selectedIndex >= 0 && selectedIndex < stats.length) {
+          stats[selectedIndex]++;
+        }
       } else if (question.type === 'short-answer') {
         if (playerAnswer.correct) stats.shortAnswerMatches++;
         else stats.shortAnswerWrong++;

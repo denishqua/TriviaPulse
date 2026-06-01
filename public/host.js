@@ -42,32 +42,10 @@ const questionAnswersGrid = document.getElementById('question-answers-grid');
 const questionAnswersCount = document.getElementById('question-answers-count');
 const btnShowResults = document.getElementById('btn-show-results');
 
-const cardOptA = document.getElementById('card-opt-A');
-const cardOptB = document.getElementById('card-opt-B');
-const cardOptC = document.getElementById('card-opt-C');
-const cardOptD = document.getElementById('card-opt-D');
-const imgOptA = document.getElementById('img-opt-A');
-const imgOptB = document.getElementById('img-opt-B');
-const imgOptC = document.getElementById('img-opt-C');
-const imgOptD = document.getElementById('img-opt-D');
-const lblOptA = document.getElementById('lbl-opt-A');
-const lblOptB = document.getElementById('lbl-opt-B');
-const lblOptC = document.getElementById('lbl-opt-C');
-const lblOptD = document.getElementById('lbl-opt-D');
-
 const resultsQTitle = document.getElementById('results-q-title');
 const resultsChart = document.getElementById('results-chart');
 const resultsCorrectText = document.getElementById('results-correct-text');
 const btnNext = document.getElementById('btn-next');
-
-const barOptA = document.getElementById('bar-opt-A');
-const barOptB = document.getElementById('bar-opt-B');
-const barOptC = document.getElementById('bar-opt-C');
-const barOptD = document.getElementById('bar-opt-D');
-const barLblOptA = document.getElementById('bar-lbl-opt-A');
-const barLblOptB = document.getElementById('bar-lbl-opt-B');
-const barLblOptC = document.getElementById('bar-lbl-opt-C');
-const barLblOptD = document.getElementById('bar-lbl-opt-D');
 
 const leaderboardList = document.getElementById('leaderboard-list');
 const btnLeaderboardNext = document.getElementById('btn-leaderboard-next');
@@ -388,85 +366,109 @@ socket.on('state-changed', (data) => {
     };
     document.getElementById('question-q-type').textContent = typeLabels[currentQuestion.type] || currentQuestion.type.toUpperCase();
     
-    // Check question type to render answers layout
+    // Check question type to render answers layout dynamically
+    questionAnswersGrid.innerHTML = '';
+    
     if (currentQuestion.type === 'multiple-choice') {
       questionAnswersGrid.style.display = 'grid';
-      questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      const optCount = currentQuestion.options.length;
+      if (optCount <= 4) {
+        questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      } else if (optCount <= 9) {
+        questionAnswersGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      } else {
+        questionAnswersGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      }
       
-      // Reset True/False swaps to defaults
-      cardOptA.className = 'answer-card red';
-      cardOptA.querySelector('.answer-shape').innerHTML = '<div class="shape-tri"></div>';
-      cardOptB.className = 'answer-card blue';
-      cardOptB.querySelector('.answer-shape').innerHTML = '<div class="shape-dia"></div>';
+      const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
+      const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
       
-      cardOptA.style.display = 'flex';
-      cardOptB.style.display = 'flex';
-      cardOptC.style.display = 'flex';
-      cardOptD.style.display = 'flex';
-      
-      lblOptA.textContent = currentQuestion.options.A;
-      lblOptB.textContent = currentQuestion.options.B;
-      lblOptC.textContent = currentQuestion.options.C;
-      lblOptD.textContent = currentQuestion.options.D;
-
-      // Handle option images
-      const optImgs = currentQuestion.optionImages || {};
-      ['A', 'B', 'C', 'D'].forEach(opt => {
-        const imgEl = document.getElementById(`img-opt-${opt}`);
-        if (imgEl) {
-          if (optImgs[opt]) {
-            imgEl.src = optImgs[opt];
-            imgEl.style.display = 'block';
-          } else {
-            imgEl.src = '';
-            imgEl.style.display = 'none';
-          }
+      currentQuestion.options.forEach((optText, idx) => {
+        const color = colors[idx % colors.length];
+        const shape = shapes[idx % shapes.length];
+        const optImg = (currentQuestion.optionImages && currentQuestion.optionImages[idx]) || '';
+        
+        const card = document.createElement('div');
+        card.className = `answer-card ${color}`;
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        
+        const shapeWrapper = document.createElement('div');
+        shapeWrapper.className = 'answer-shape';
+        const shapeIcon = document.createElement('div');
+        shapeIcon.className = `shape-${shape}`;
+        shapeWrapper.appendChild(shapeIcon);
+        card.appendChild(shapeWrapper);
+        
+        if (optImg) {
+          const img = document.createElement('img');
+          img.className = 'answer-opt-image';
+          img.src = optImg;
+          img.style.width = '42px';
+          img.style.height = '42px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '8px';
+          img.style.marginRight = '15px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.25)';
+          img.style.background = 'rgba(255,255,255,0.05)';
+          img.style.padding = '2px';
+          card.appendChild(img);
         }
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'option-text';
+        textSpan.textContent = optText;
+        card.appendChild(textSpan);
+        
+        questionAnswersGrid.appendChild(card);
       });
+      
     } else if (currentQuestion.type === 'true-false') {
       questionAnswersGrid.style.display = 'grid';
       questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
       
-      // Swap colors and shapes to align with standard (True = Blue Diamond, False = Red Triangle)
-      cardOptA.className = 'answer-card blue';
-      cardOptA.querySelector('.answer-shape').innerHTML = '<div class="shape-dia"></div>';
+      const tfConfig = [
+        { text: 'True', color: 'blue', shape: 'dia', img: (currentQuestion.optionImages && currentQuestion.optionImages[0]) || '' },
+        { text: 'False', color: 'red', shape: 'tri', img: (currentQuestion.optionImages && currentQuestion.optionImages[1]) || '' }
+      ];
       
-      cardOptB.className = 'answer-card red';
-      cardOptB.querySelector('.answer-shape').innerHTML = '<div class="shape-tri"></div>';
-      
-      cardOptA.style.display = 'flex';
-      cardOptB.style.display = 'flex';
-      cardOptC.style.display = 'none';
-      cardOptD.style.display = 'none';
-      
-      lblOptA.textContent = 'True';
-      lblOptB.textContent = 'False';
-
-      // Reset option images for True/False
-      const optImgs = currentQuestion.optionImages || {};
-      const imgTrue = document.getElementById('img-opt-A');
-      const imgFalse = document.getElementById('img-opt-B');
-      
-      if (imgTrue) {
-        if (optImgs.A) {
-          imgTrue.src = optImgs.A;
-          imgTrue.style.display = 'block';
-        } else {
-          imgTrue.src = '';
-          imgTrue.style.display = 'none';
+      tfConfig.forEach(cfg => {
+        const card = document.createElement('div');
+        card.className = `answer-card ${cfg.color}`;
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        
+        const shapeWrapper = document.createElement('div');
+        shapeWrapper.className = 'answer-shape';
+        const shapeIcon = document.createElement('div');
+        shapeIcon.className = `shape-${cfg.shape}`;
+        shapeWrapper.appendChild(shapeIcon);
+        card.appendChild(shapeWrapper);
+        
+        if (cfg.img) {
+          const img = document.createElement('img');
+          img.className = 'answer-opt-image';
+          img.src = cfg.img;
+          img.style.width = '42px';
+          img.style.height = '42px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '8px';
+          img.style.marginRight = '15px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.25)';
+          img.style.background = 'rgba(255,255,255,0.05)';
+          img.style.padding = '2px';
+          card.appendChild(img);
         }
-      }
-      if (imgFalse) {
-        if (optImgs.B) {
-          imgFalse.src = optImgs.B;
-          imgFalse.style.display = 'block';
-        } else {
-          imgFalse.src = '';
-          imgFalse.style.display = 'none';
-        }
-      }
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'option-text';
+        textSpan.textContent = cfg.text;
+        card.appendChild(textSpan);
+        
+        questionAnswersGrid.appendChild(card);
+      });
+      
     } else if (currentQuestion.type === 'short-answer') {
-      // Hide standard options grid for short answer
       questionAnswersGrid.style.display = 'none';
     }
 
@@ -476,91 +478,203 @@ socket.on('state-changed', (data) => {
     resultsQTitle.textContent = currentQuestion.question;
     resultsCorrectText.textContent = data.correctAnswer;
     
-    // Render chart bars based on stats
+    // Render chart bars based on stats dynamically
     const stats = data.stats;
-    const totalAnswers = Object.values(stats).reduce((acc, curr) => acc + curr, 0);
+    let totalAnswers = 0;
+    if (Array.isArray(stats)) {
+      totalAnswers = stats.reduce((acc, curr) => acc + curr, 0);
+    } else if (stats) {
+      totalAnswers = (stats.shortAnswerMatches || 0) + (stats.shortAnswerWrong || 0);
+    }
 
     const getPercent = (count) => {
       if (totalAnswers === 0) return '0%';
       return `${Math.round((count / totalAnswers) * 100)}%`;
     };
 
+    resultsChart.innerHTML = '';
+
     if (currentQuestion.type === 'short-answer') {
-      // Modify chart labels & display for Short Answer matches
       resultsChart.style.display = 'flex';
       
-      // Let Red bar represent Incorrect matches, Green represents Correct
-      cardOptC.style.display = 'none';
-      cardOptD.style.display = 'none';
+      const saConfig = [
+        { text: 'Correct Match', color: 'green', count: stats.shortAnswerMatches, shape: 'squ' },
+        { text: 'Incorrect Match', color: 'red', count: stats.shortAnswerWrong, shape: 'tri' }
+      ];
       
-      barOptA.className = 'chart-bar green';
-      barOptB.className = 'chart-bar red';
-      barOptC.parentElement.style.display = 'none';
-      barOptD.parentElement.style.display = 'none';
+      saConfig.forEach(cfg => {
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'chart-bar-wrapper';
+        
+        const bar = document.createElement('div');
+        bar.className = `chart-bar ${cfg.color}`;
+        bar.style.setProperty('--final-height', getPercent(cfg.count));
+        bar.style.height = '0%';
+        
+        const countLabel = document.createElement('span');
+        countLabel.className = 'count-label';
+        countLabel.textContent = `${cfg.count} (${getPercent(cfg.count)})`;
+        bar.appendChild(countLabel);
+        
+        barWrapper.appendChild(bar);
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'chart-label';
+        labelDiv.style.display = 'flex';
+        labelDiv.style.flexDirection = 'column';
+        labelDiv.style.alignItems = 'center';
+        labelDiv.style.gap = '8px';
+        labelDiv.style.marginTop = '10px';
+        
+        const shapeIcon = document.createElement('div');
+        if (cfg.shape === 'tri') {
+          shapeIcon.className = 'shape-tri';
+          shapeIcon.style.borderBottomWidth = '20px';
+          shapeIcon.style.borderLeftWidth = '12px';
+          shapeIcon.style.borderRightWidth = '12px';
+        } else {
+          shapeIcon.className = `shape-${cfg.shape}`;
+          shapeIcon.style.width = '18px';
+          shapeIcon.style.height = '18px';
+        }
+        labelDiv.appendChild(shapeIcon);
+        
+        const textSpan = document.createElement('span');
+        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontWeight = '700';
+        textSpan.style.maxWidth = '130px';
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+        textSpan.style.color = 'var(--text-secondary)';
+        textSpan.textContent = cfg.text;
+        labelDiv.appendChild(textSpan);
+        
+        barWrapper.appendChild(labelDiv);
+        resultsChart.appendChild(barWrapper);
+      });
       
-      barLblOptA.textContent = `${stats.shortAnswerMatches} Correct`;
-      barOptA.style.setProperty('--final-height', getPercent(stats.shortAnswerMatches));
-      
-      barLblOptB.textContent = `${stats.shortAnswerWrong} Wrong`;
-      barOptB.style.setProperty('--final-height', getPercent(stats.shortAnswerWrong));
-
-      // Set Short Answer text labels
-      document.getElementById('chart-txt-A').textContent = 'Correct Match';
-      document.getElementById('chart-txt-B').textContent = 'Incorrect Match';
-    } else {
-      // Render standard choice bars
+    } else if (currentQuestion.type === 'true-false') {
       resultsChart.style.display = 'flex';
       
-      barOptA.parentElement.style.display = 'flex';
-      barOptB.parentElement.style.display = 'flex';
-
-      // Set text and check layout swaps for True/False colors
-      if (currentQuestion.type === 'true-false') {
-        barOptA.className = 'chart-bar blue';
-        barOptB.className = 'chart-bar red';
-        
-        barOptA.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-dia" style="width: 18px; height: 18px;"></div><span id="chart-txt-A" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">True</span>';
-        barOptB.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div><span id="chart-txt-B" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">False</span>';
-
-        document.getElementById('chart-txt-A').textContent = 'True';
-        document.getElementById('chart-txt-B').textContent = 'False';
-        
-        barOptC.parentElement.style.display = 'none';
-        barOptD.parentElement.style.display = 'none';
-      } else {
-        // Multiple choice defaults
-        barOptA.className = 'chart-bar red';
-        barOptB.className = 'chart-bar blue';
-        
-        barOptA.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div><span id="chart-txt-A" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option A</span>';
-        barOptB.parentElement.querySelector('.chart-label').innerHTML = '<div class="shape-dia" style="width: 18px; height: 18px;"></div><span id="chart-txt-B" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option B</span>';
-
-        document.getElementById('chart-txt-A').textContent = currentQuestion.options.A;
-        document.getElementById('chart-txt-B').textContent = currentQuestion.options.B;
-      }
+      const tfConfig = [
+        { text: 'True', color: 'blue', shape: 'dia', count: stats[0] || 0 },
+        { text: 'False', color: 'red', shape: 'tri', count: stats[1] || 0 }
+      ];
       
-      barLblOptA.textContent = stats.A;
-      barOptA.style.setProperty('--final-height', getPercent(stats.A));
+      tfConfig.forEach(cfg => {
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'chart-bar-wrapper';
+        
+        const bar = document.createElement('div');
+        bar.className = `chart-bar ${cfg.color}`;
+        bar.style.setProperty('--final-height', getPercent(cfg.count));
+        bar.style.height = '0%';
+        
+        const countLabel = document.createElement('span');
+        countLabel.className = 'count-label';
+        countLabel.textContent = `${cfg.count} (${getPercent(cfg.count)})`;
+        bar.appendChild(countLabel);
+        
+        barWrapper.appendChild(bar);
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'chart-label';
+        labelDiv.style.display = 'flex';
+        labelDiv.style.flexDirection = 'column';
+        labelDiv.style.alignItems = 'center';
+        labelDiv.style.gap = '8px';
+        labelDiv.style.marginTop = '10px';
+        
+        const shapeIcon = document.createElement('div');
+        if (cfg.shape === 'tri') {
+          shapeIcon.className = 'shape-tri';
+          shapeIcon.style.borderBottomWidth = '20px';
+          shapeIcon.style.borderLeftWidth = '12px';
+          shapeIcon.style.borderRightWidth = '12px';
+        } else {
+          shapeIcon.className = `shape-${cfg.shape}`;
+          shapeIcon.style.width = '18px';
+          shapeIcon.style.height = '18px';
+        }
+        labelDiv.appendChild(shapeIcon);
+        
+        const textSpan = document.createElement('span');
+        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontWeight = '700';
+        textSpan.style.maxWidth = '130px';
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+        textSpan.style.color = 'var(--text-secondary)';
+        textSpan.textContent = cfg.text;
+        labelDiv.appendChild(textSpan);
+        
+        barWrapper.appendChild(labelDiv);
+        resultsChart.appendChild(barWrapper);
+      });
       
-      barLblOptB.textContent = stats.B;
-      barOptB.style.setProperty('--final-height', getPercent(stats.B));
-
-      if (currentQuestion.type === 'multiple-choice') {
-        barOptC.parentElement.style.display = 'flex';
-        barOptD.parentElement.style.display = 'flex';
+    } else if (currentQuestion.type === 'multiple-choice') {
+      resultsChart.style.display = 'flex';
+      
+      const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
+      const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
+      
+      currentQuestion.options.forEach((optText, idx) => {
+        const color = colors[idx % colors.length];
+        const shape = shapes[idx % shapes.length];
+        const count = stats[idx] || 0;
         
-        barLblOptC.textContent = stats.C;
-        barOptC.style.setProperty('--final-height', getPercent(stats.C));
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'chart-bar-wrapper';
         
-        barLblOptD.textContent = stats.D;
-        barOptD.style.setProperty('--final-height', getPercent(stats.D));
-
-        document.getElementById('chart-txt-C').textContent = currentQuestion.options.C;
-        document.getElementById('chart-txt-D').textContent = currentQuestion.options.D;
-      } else if (currentQuestion.type !== 'true-false') {
-        barOptC.parentElement.style.display = 'none';
-        barOptD.parentElement.style.display = 'none';
-      }
+        const bar = document.createElement('div');
+        bar.className = `chart-bar ${color}`;
+        bar.style.setProperty('--final-height', getPercent(count));
+        bar.style.height = '0%';
+        
+        const countLabel = document.createElement('span');
+        countLabel.className = 'count-label';
+        countLabel.textContent = `${count} (${getPercent(count)})`;
+        bar.appendChild(countLabel);
+        
+        barWrapper.appendChild(bar);
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'chart-label';
+        labelDiv.style.display = 'flex';
+        labelDiv.style.flexDirection = 'column';
+        labelDiv.style.alignItems = 'center';
+        labelDiv.style.gap = '8px';
+        labelDiv.style.marginTop = '10px';
+        
+        const shapeIcon = document.createElement('div');
+        if (shape === 'tri') {
+          shapeIcon.className = 'shape-tri';
+          shapeIcon.style.borderBottomWidth = '20px';
+          shapeIcon.style.borderLeftWidth = '12px';
+          shapeIcon.style.borderRightWidth = '12px';
+        } else {
+          shapeIcon.className = `shape-${shape}`;
+          shapeIcon.style.width = '18px';
+          shapeIcon.style.height = '18px';
+        }
+        labelDiv.appendChild(shapeIcon);
+        
+        const textSpan = document.createElement('span');
+        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontWeight = '700';
+        textSpan.style.maxWidth = '130px';
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+        textSpan.style.color = 'var(--text-secondary)';
+        textSpan.textContent = optText;
+        labelDiv.appendChild(textSpan);
+        
+        barWrapper.appendChild(labelDiv);
+        resultsChart.appendChild(barWrapper);
+      });
     }
 
     showSection(stateResults);

@@ -73,15 +73,9 @@ const submitAnswer = (ans) => {
   playerWaitMessage.textContent = 'Answer submitted! Waiting for other players...';
 };
 
-// Map Multiple Choice Buttons (A, B, C, D)
-document.getElementById('pbtn-opt-A').addEventListener('click', () => submitAnswer('A'));
-document.getElementById('pbtn-opt-B').addEventListener('click', () => submitAnswer('B'));
-document.getElementById('pbtn-opt-C').addEventListener('click', () => submitAnswer('C'));
-document.getElementById('pbtn-opt-D').addEventListener('click', () => submitAnswer('D'));
-
-// Map True/False Buttons (True -> A, False -> B)
-document.getElementById('pbtn-tf-true').addEventListener('click', () => submitAnswer('A'));
-document.getElementById('pbtn-tf-false').addEventListener('click', () => submitAnswer('B'));
+// Map True/False Buttons (True -> index 0, False -> index 1)
+document.getElementById('pbtn-tf-true').addEventListener('click', () => submitAnswer(0));
+document.getElementById('pbtn-tf-false').addEventListener('click', () => submitAnswer(1));
 
 // Map Short Answer Text Submit
 btnSubmitShortAnswer.addEventListener('click', () => {
@@ -119,29 +113,69 @@ socket.on('state-changed', (data) => {
     if (currentQuestionType === 'multiple-choice') {
       showPanel(panelControllerMc);
       
-      const optImgs = data.question.optionImages || {};
-      ['A', 'B', 'C', 'D'].forEach(opt => {
-        const imgEl = document.getElementById(`pimg-opt-${opt}`);
-        if (imgEl) {
-          if (optImgs[opt]) {
-            imgEl.src = optImgs[opt];
-            imgEl.style.display = 'block';
-          } else {
-            imgEl.src = '';
-            imgEl.style.display = 'none';
-          }
+      const gridContainer = panelControllerMc.querySelector('.player-grid-buttons');
+      gridContainer.innerHTML = '';
+      
+      const optCount = data.question.options.length;
+      if (optCount <= 4) {
+        gridContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      } else if (optCount <= 9) {
+        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      } else {
+        gridContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      }
+      
+      const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
+      const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
+      const optImgs = data.question.optionImages || [];
+      
+      data.question.options.forEach((optVal, idx) => {
+        const color = colors[idx % colors.length];
+        const shape = shapes[idx % shapes.length];
+        
+        const btn = document.createElement('button');
+        btn.className = `player-btn ${color}`;
+        btn.style.display = 'flex';
+        btn.style.flexDirection = 'column';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.gap = '10px';
+        
+        const shapeDiv = document.createElement('div');
+        shapeDiv.className = `shape-${shape}`;
+        btn.appendChild(shapeDiv);
+        
+        if (optImgs[idx]) {
+          const img = document.createElement('img');
+          img.className = 'player-opt-img';
+          img.src = optImgs[idx];
+          img.style.width = '42px';
+          img.style.height = '42px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
+          img.style.padding = '2px';
+          btn.appendChild(img);
         }
+        
+        btn.addEventListener('click', () => {
+          submitAnswer(idx);
+        });
+        
+        gridContainer.appendChild(btn);
       });
+      
     } else if (currentQuestionType === 'true-false') {
       showPanel(panelControllerTf);
       
-      const optImgs = data.question.optionImages || {};
+      const optImgs = data.question.optionImages || [];
       const imgTrue = document.getElementById('pimg-tf-true');
       const imgFalse = document.getElementById('pimg-tf-false');
       
       if (imgTrue) {
-        if (optImgs.A) {
-          imgTrue.src = optImgs.A;
+        if (optImgs[0]) {
+          imgTrue.src = optImgs[0];
           imgTrue.style.display = 'block';
         } else {
           imgTrue.src = '';
@@ -149,8 +183,8 @@ socket.on('state-changed', (data) => {
         }
       }
       if (imgFalse) {
-        if (optImgs.B) {
-          imgFalse.src = optImgs.B;
+        if (optImgs[1]) {
+          imgFalse.src = optImgs[1];
           imgFalse.style.display = 'block';
         } else {
           imgFalse.src = '';

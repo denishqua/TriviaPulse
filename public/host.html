@@ -110,26 +110,7 @@
       <div class="host-grid-panel">
         <!-- Visual cues for answers (for players to see options on host screen) -->
         <div class="answers-grid" id="question-answers-grid">
-          <div class="answer-card red" id="card-opt-A" style="display: flex; align-items: center;">
-            <div class="answer-shape"><div class="shape-tri"></div></div>
-            <img class="answer-opt-image" id="img-opt-A" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
-            <span class="option-text" id="lbl-opt-A">Paris</span>
-          </div>
-          <div class="answer-card blue" id="card-opt-B" style="display: flex; align-items: center;">
-            <div class="answer-shape"><div class="shape-dia"></div></div>
-            <img class="answer-opt-image" id="img-opt-B" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
-            <span class="option-text" id="lbl-opt-B">London</span>
-          </div>
-          <div class="answer-card yellow" id="card-opt-C" style="display: flex; align-items: center;">
-            <div class="answer-shape"><div class="shape-cir"></div></div>
-            <img class="answer-opt-image" id="img-opt-C" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
-            <span class="option-text" id="lbl-opt-C">Berlin</span>
-          </div>
-          <div class="answer-card green" id="card-opt-D" style="display: flex; align-items: center;">
-            <div class="answer-shape"><div class="shape-squ"></div></div>
-            <img class="answer-opt-image" id="img-opt-D" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
-            <span class="option-text" id="lbl-opt-D">Rome</span>
-          </div>
+          <!-- Dynamically populated answer option cards -->
         </div>
 
         <!-- Answers count side panel -->
@@ -149,42 +130,7 @@
 
       <!-- Vertical Chart displaying answer choices distribution -->
       <div class="results-chart-container" id="results-chart">
-        <div class="chart-bar-wrapper">
-          <div class="chart-bar red" id="bar-opt-A" style="--final-height: 0%; height: 0%;">
-            <span class="count-label" id="bar-lbl-opt-A">0</span>
-          </div>
-          <div class="chart-label" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-            <div class="shape-tri" style="border-bottom-width: 20px; border-left-width: 12px; border-right-width: 12px;"></div>
-            <span id="chart-txt-A" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option A</span>
-          </div>
-        </div>
-        <div class="chart-bar-wrapper">
-          <div class="chart-bar blue" id="bar-opt-B" style="--final-height: 0%; height: 0%;">
-            <span class="count-label" id="bar-lbl-opt-B">0</span>
-          </div>
-          <div class="chart-label" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-            <div class="shape-dia" style="width: 18px; height: 18px;"></div>
-            <span id="chart-txt-B" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option B</span>
-          </div>
-        </div>
-        <div class="chart-bar-wrapper">
-          <div class="chart-bar yellow" id="bar-opt-C" style="--final-height: 0%; height: 0%;">
-            <span class="count-label" id="bar-lbl-opt-C">0</span>
-          </div>
-          <div class="chart-label" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-            <div class="shape-cir" style="width: 20px; height: 20px;"></div>
-            <span id="chart-txt-C" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option C</span>
-          </div>
-        </div>
-        <div class="chart-bar-wrapper">
-          <div class="chart-bar green" id="bar-opt-D" style="--final-height: 0%; height: 0%;">
-            <span class="count-label" id="bar-lbl-opt-D">0</span>
-          </div>
-          <div class="chart-label" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-            <div class="shape-squ" style="width: 18px; height: 18px;"></div>
-            <span id="chart-txt-D" style="font-size: 0.85rem; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary);">Option D</span>
-          </div>
-        </div>
+        <!-- Dynamically populated vertical bars -->
       </div>
 
       <div class="results-correct-answer">

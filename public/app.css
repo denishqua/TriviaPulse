@@ -18,6 +18,12 @@
   --blue-dia: #1368ff;
   --yellow-cir: #ffa600;
   --green-squ: #10b981;
+  --purple-hex: #8b5cf6;
+  --pink-sta: #ec4899;
+  --orange-pen: #f97316;
+  --teal-cro: #14b8a6;
+  --cyan-cre: #06b6d4;
+  --amber-hea: #f59e0b;
   
   /* Accents */
   --purple-neon: #a855f7;
@@ -401,6 +407,12 @@ select {
 .answer-card.blue { background: var(--blue-dia); }
 .answer-card.yellow { background: var(--yellow-cir); }
 .answer-card.green { background: var(--green-squ); }
+.answer-card.purple { background: var(--purple-hex); }
+.answer-card.pink { background: var(--pink-sta); }
+.answer-card.orange { background: var(--orange-pen); }
+.answer-card.teal { background: var(--teal-cro); }
+.answer-card.cyan { background: var(--cyan-cre); }
+.answer-card.amber { background: var(--amber-hea); }
 
 .answer-shape {
   width: 44px;
@@ -437,6 +449,48 @@ select {
   width: 36px;
   height: 36px;
   background: white;
+}
+
+.shape-hex {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.shape-sta {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.shape-pen {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+.shape-cro {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%);
+}
+
+.shape-cre {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(0 0, 100% 0, 80% 50%, 100% 100%, 0 100%, 20% 50%);
+}
+
+.shape-hea {
+  width: 38px;
+  height: 38px;
+  background: white;
+  clip-path: polygon(50% 15%, 75% 0%, 100% 25%, 100% 50%, 50% 100%, 0% 50%, 0% 25%, 25% 0%);
 }
 
 /* Side Stats Panel */
@@ -513,6 +567,12 @@ select {
 .chart-bar.blue { background: var(--blue-dia); }
 .chart-bar.yellow { background: var(--yellow-cir); }
 .chart-bar.green { background: var(--green-squ); }
+.chart-bar.purple { background: var(--purple-hex); }
+.chart-bar.pink { background: var(--pink-sta); }
+.chart-bar.orange { background: var(--orange-pen); }
+.chart-bar.teal { background: var(--teal-cro); }
+.chart-bar.cyan { background: var(--cyan-cre); }
+.chart-bar.amber { background: var(--amber-hea); }
 
 .chart-label {
   margin-top: 15px;
@@ -804,6 +864,12 @@ select {
 .player-btn.blue { background: var(--blue-dia); }
 .player-btn.yellow { background: var(--yellow-cir); }
 .player-btn.green { background: var(--green-squ); }
+.player-btn.purple { background: var(--purple-hex); }
+.player-btn.pink { background: var(--pink-sta); }
+.player-btn.orange { background: var(--orange-pen); }
+.player-btn.teal { background: var(--teal-cro); }
+.player-btn.cyan { background: var(--cyan-cre); }
+.player-btn.amber { background: var(--amber-hea); }
 
 /* Player Short Answer Input */
 .player-short-answer-panel {
