@@ -1,0 +1,16 @@
+[
+  {
+    "type": "survey",
+    "question": "Multi-vote Survey Question",
+    "timeLimit": 20,
+    "maxVotes": 3,
+    "options": ["Option A", "Option B", "Option C"]
+  },
+  {
+    "type": "survey",
+    "question": "Single-vote Survey Question",
+    "timeLimit": 20,
+    "maxVotes": 1,
+    "options": ["Option X", "Option Y", "Option Z"]
+  }
+]

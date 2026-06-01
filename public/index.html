@@ -60,9 +60,13 @@
 
     <!-- 4. CONTROLLER: MULTIPLE CHOICE -->
     <section id="panel-controller-mc" class="controller-panel animate-fade-in" style="display: none;">
+      <div id="survey-votes-header" style="display: none; text-align: center; margin-bottom: 20px; font-weight: 800; font-size: 1.3rem; color: var(--text-primary); letter-spacing: 0.5px;">
+        Votes Remaining: <span id="survey-votes-count" style="color: var(--purple-neon); font-size: 1.6rem; text-shadow: 0 0 10px var(--purple-neon); font-weight: 900;">1</span>
+      </div>
       <div class="player-grid-buttons">
         <!-- Dynamically populated multiple choice buttons -->
       </div>
+      <button id="btn-submit-survey-votes" class="btn-primary btn-block" style="display: none; margin-top: 25px; padding: 15px 0; border-radius: 12px; box-shadow: var(--shadow-glow); text-transform: uppercase; font-weight: 800; font-size: 1.1rem; letter-spacing: 1px;">Submit Votes</button>
     </section>
 
     <!-- 5. CONTROLLER: TRUE / FALSE (Aligned: True = Blue Diamond, False = Red Triangle) -->

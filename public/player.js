@@ -29,6 +29,11 @@ const btnSubmitShortAnswer = document.getElementById('btn-submit-short-answer');
 
 const playerWaitMessage = document.getElementById('player-wait-message');
 
+// Survey Multi-Votes DOM
+const surveyVotesHeader = document.getElementById('survey-votes-header');
+const surveyVotesCount = document.getElementById('survey-votes-count');
+const btnSubmitSurveyVotes = document.getElementById('btn-submit-survey-votes');
+
 // Avatar UI Selectors
 const avatarPicker = document.getElementById('avatar-picker');
 const inputCustomAvatar = document.getElementById('input-custom-avatar');
@@ -170,6 +175,28 @@ socket.on('state-changed', (data) => {
       const gridContainer = panelControllerMc.querySelector('.player-grid-buttons');
       gridContainer.innerHTML = '';
       
+      const maxVotes = data.question.maxVotes || 1;
+      const isMultiVoteSurvey = currentQuestionType === 'survey' && maxVotes > 1;
+
+      // Handle UI headers/buttons display
+      if (isMultiVoteSurvey) {
+        surveyVotesHeader.style.display = 'block';
+        surveyVotesCount.textContent = maxVotes;
+        
+        // Setup cloned submit button to clear previous listeners
+        const submitBtn = btnSubmitSurveyVotes.cloneNode(true);
+        btnSubmitSurveyVotes.parentNode.replaceChild(submitBtn, btnSubmitSurveyVotes);
+        submitBtn.style.display = 'block';
+        submitBtn.disabled = true; // Disabled initially
+        submitBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+        submitBtn.style.color = 'var(--text-muted)';
+        submitBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        submitBtn.style.boxShadow = 'none';
+      } else {
+        surveyVotesHeader.style.display = 'none';
+        btnSubmitSurveyVotes.style.display = 'none';
+      }
+
       const optCount = data.question.options.length;
       if (optCount <= 4) {
         gridContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
@@ -182,7 +209,22 @@ socket.on('state-changed', (data) => {
       const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
       const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
       const optImgs = data.question.optionImages || [];
-      
+
+      // Multi-vote state
+      let allocatedVotes = new Array(optCount).fill(0);
+      let remainingVotes = maxVotes;
+
+      // Function to get current selections formatted as comma-separated string
+      const getFormattedChoices = () => {
+        const choices = [];
+        allocatedVotes.forEach((vCount, oIdx) => {
+          for (let k = 0; k < vCount; k++) {
+            choices.push(oIdx);
+          }
+        });
+        return choices.join(',');
+      };
+
       data.question.options.forEach((optVal, idx) => {
         const color = colors[idx % colors.length];
         const shape = shapes[idx % shapes.length];
@@ -193,6 +235,79 @@ socket.on('state-changed', (data) => {
         btn.style.flexDirection = 'column';
         btn.style.alignItems = 'center';
         btn.style.justifyContent = 'center';
+        btn.style.position = 'relative'; // Positioning context for badges
+
+        // Dynamic badge for showing allocated votes on this card
+        const badge = document.createElement('div');
+        badge.className = 'vote-badge';
+        badge.style.position = 'absolute';
+        badge.style.top = '10px';
+        badge.style.right = '10px';
+        badge.style.background = 'var(--purple-neon)';
+        badge.style.color = 'white';
+        badge.style.borderRadius = '50%';
+        badge.style.width = '26px';
+        badge.style.height = '26px';
+        badge.style.display = 'none'; // Hidden initially
+        badge.style.alignItems = 'center';
+        badge.style.justifyContent = 'center';
+        badge.style.fontSize = '0.9rem';
+        badge.style.fontWeight = '900';
+        badge.style.boxShadow = '0 0 10px var(--purple-neon)';
+        badge.style.zIndex = '5';
+        btn.appendChild(badge);
+
+        // Dynamic floating circular minus button on this card
+        const minusBtn = document.createElement('div');
+        minusBtn.className = 'vote-minus';
+        minusBtn.innerHTML = '−';
+        minusBtn.style.position = 'absolute';
+        minusBtn.style.bottom = '10px';
+        minusBtn.style.right = '10px';
+        minusBtn.style.background = 'rgba(0, 0, 0, 0.4)';
+        minusBtn.style.color = 'white';
+        minusBtn.style.borderRadius = '50%';
+        minusBtn.style.width = '30px';
+        minusBtn.style.height = '30px';
+        minusBtn.style.display = 'none'; // Hidden initially
+        minusBtn.style.alignItems = 'center';
+        minusBtn.style.justifyContent = 'center';
+        minusBtn.style.fontSize = '1.3rem';
+        minusBtn.style.fontWeight = '900';
+        minusBtn.style.border = '1.5px solid rgba(255, 255, 255, 0.5)';
+        minusBtn.style.cursor = 'pointer';
+        minusBtn.style.zIndex = '5';
+        
+        minusBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Stop click from triggering parent card!
+          if (allocatedVotes[idx] > 0) {
+            allocatedVotes[idx]--;
+            remainingVotes++;
+            surveyVotesCount.textContent = remainingVotes;
+
+            // Update badge and minus display
+            if (allocatedVotes[idx] > 0) {
+              badge.textContent = allocatedVotes[idx];
+            } else {
+              badge.style.display = 'none';
+              minusBtn.style.display = 'none';
+            }
+
+            // Autosubmit partial choice
+            socket.emit('player-submit-answer', { pin: myPin, answer: getFormattedChoices(), isPartial: true });
+
+            // Disable submit button since there are remaining votes
+            const submitBtn = document.getElementById('btn-submit-survey-votes');
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+              submitBtn.style.color = 'var(--text-muted)';
+              submitBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              submitBtn.style.boxShadow = 'none';
+            }
+          }
+        });
+        btn.appendChild(minusBtn);
         
         if (optImgs[idx]) {
           btn.style.padding = '4px';
@@ -218,11 +333,56 @@ socket.on('state-changed', (data) => {
         }
         
         btn.addEventListener('click', () => {
-          submitAnswer(idx);
+          if (isMultiVoteSurvey) {
+            if (remainingVotes > 0) {
+              allocatedVotes[idx]++;
+              remainingVotes--;
+              surveyVotesCount.textContent = remainingVotes;
+
+              // Show badge and minus button
+              badge.textContent = allocatedVotes[idx];
+              badge.style.display = 'flex';
+              minusBtn.style.display = 'flex';
+
+              // Autosubmit partial choice
+              socket.emit('player-submit-answer', { pin: myPin, answer: getFormattedChoices(), isPartial: true });
+
+              if (remainingVotes === 0) {
+                // Enable submit button and glow!
+                const submitBtn = document.getElementById('btn-submit-survey-votes');
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.style.background = 'var(--purple-neon)';
+                  submitBtn.style.color = 'white';
+                  submitBtn.style.borderColor = 'var(--purple-neon)';
+                  submitBtn.style.boxShadow = 'var(--shadow-glow)';
+                }
+              }
+            }
+          } else {
+            submitAnswer(idx);
+          }
         });
         
         gridContainer.appendChild(btn);
       });
+
+      // Bind dynamic submit action
+      if (isMultiVoteSurvey) {
+        const submitBtn = document.getElementById('btn-submit-survey-votes');
+        if (submitBtn) {
+          submitBtn.addEventListener('click', () => {
+            if (remainingVotes === 0) {
+              const finalAns = getFormattedChoices();
+              // Emit final answer (isPartial: false)
+              socket.emit('player-submit-answer', { pin: myPin, answer: finalAns, isPartial: false });
+              showPanel(panelPlayerWait);
+              playerWaitMessage.textContent = 'Votes submitted! Waiting for other players...';
+            }
+          });
+        }
+      }
+    }
       
     } else if (currentQuestionType === 'true-false') {
       showPanel(panelControllerTf);

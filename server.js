@@ -155,6 +155,7 @@ io.on('connection', (socket) => {
             type: item.type || 'multiple-choice',
             question: item.question || '',
             timeLimit: parseInt(item.timeLimit) || parseInt(item.timelimit) || 20,
+            maxVotes: parseInt(item.maxVotes) || parseInt(item.maxvotes) || 1,
             questionimage: item.questionImage || item.questionimage || '',
             correctanswer: item.correctAnswer || item.correctanswer || '',
             options: [],
@@ -226,6 +227,7 @@ io.on('connection', (socket) => {
           q.type = q.type || 'multiple-choice';
           q.questionimage = q.questionimage || '';
           q.correctanswer = q.correctanswer || '';
+          q.maxVotes = parseInt(q.maxvotes) || parseInt(q.maxVotes) || 1;
 
           if (q.type === 'true-false' && q.options.length === 0) {
             q.options = ['True', 'False'];
@@ -375,91 +377,32 @@ io.on('connection', (socket) => {
     if (!game || game.hostSocketId !== socket.id) return;
 
     if (game.gameState === 'RESULTS') {
-      // Transition to LEADERBOARD
-      game.gameState = 'LEADERBOARD';
-      const leaderboard = getLeaderboard(game);
-      
-      io.to(`game_${game.pin}`).emit('state-changed', {
-        gameState: 'LEADERBOARD',
-        leaderboard
-      });
+      const question = game.questions[game.currentQuestionIndex];
+      if (question.type === 'survey') {
+        // Skip Leaderboard for survey questions!
+        game.currentQuestionIndex++;
+        if (game.currentQuestionIndex < game.questions.length) {
+          startQuestionIntro(game);
+        } else {
+          showFinalPodium(game);
+        }
+      } else {
+        // Transition to LEADERBOARD
+        game.gameState = 'LEADERBOARD';
+        const leaderboard = getLeaderboard(game);
+        
+        io.to(`game_${game.pin}`).emit('state-changed', {
+          gameState: 'LEADERBOARD',
+          leaderboard
+        });
+      }
     } else if (game.gameState === 'LEADERBOARD') {
       // Go to next question or Podium
       game.currentQuestionIndex++;
       if (game.currentQuestionIndex < game.questions.length) {
         startQuestionIntro(game);
       } else {
-        // Game Over! Podium
-        game.gameState = 'PODIUM';
-        // Build podium — include all players tied at each rank position
-        const fullLeaderboard = getLeaderboard(game);
-        const podium = [];
-        let rank = 1;
-        let i = 0;
-        while (i < fullLeaderboard.length && rank <= 3) {
-          const currentScore = fullLeaderboard[i].score;
-          const tied = [];
-          while (i < fullLeaderboard.length && fullLeaderboard[i].score === currentScore) {
-            tied.push(fullLeaderboard[i]);
-            i++;
-          }
-          podium.push({ rank, players: tied, score: currentScore });
-          rank += tied.length;
-        }
-        
-        // Save podium results persistently
-        savePodiumResults(game);
-
-        // Gather all survey questions and compile their top 3 answers
-        const surveySummaries = [];
-        game.questions.forEach((q, qIdx) => {
-          if (q.type === 'survey') {
-            const counts = new Array(q.options.length).fill(0);
-            for (const player of game.players.values()) {
-              const playerAns = player.answers[qIdx];
-              if (playerAns && playerAns.answer !== undefined && playerAns.answer !== null) {
-                const choice = playerAns.answer.toString().trim().toLowerCase();
-                let selectedIndex = -1;
-                const numericIndex = parseInt(choice, 10);
-                if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < q.options.length) {
-                  selectedIndex = numericIndex;
-                } else {
-                  const charCode = choice.charCodeAt(0) - 97;
-                  if (choice.length === 1 && charCode >= 0 && charCode < q.options.length) {
-                    selectedIndex = charCode;
-                  } else {
-                    selectedIndex = q.options.findIndex(opt => opt.trim().toLowerCase() === choice);
-                  }
-                }
-                if (selectedIndex >= 0 && selectedIndex < counts.length) {
-                  counts[selectedIndex]++;
-                }
-              }
-            }
-
-            // Create list of options with their final count
-            const compiledOptions = q.options.map((optText, optIdx) => ({
-              text: optText,
-              count: counts[optIdx],
-              image: (q.optionImages && q.optionImages[optIdx]) || ''
-            }));
-
-            // Sort by count descending
-            compiledOptions.sort((a, b) => b.count - a.count);
-
-            surveySummaries.push({
-              question: q.question,
-              questionImage: q.questionimage || '',
-              topChoices: compiledOptions.slice(0, 3) // Top 3 choices
-            });
-          }
-        });
-
-        io.to(`game_${game.pin}`).emit('state-changed', {
-          gameState: 'PODIUM',
-          podium,
-          surveys: surveySummaries
-        });
+        showFinalPodium(game);
       }
     }
   });
@@ -526,15 +469,15 @@ io.on('connection', (socket) => {
   });
 
   // Player submits answer
-  socket.on('player-submit-answer', ({ answer }) => {
+  socket.on('player-submit-answer', ({ answer, isPartial }) => {
     const pin = 'local_game';
     const game = games.get(pin);
     if (!game || game.gameState !== 'QUESTION') return;
     if (!game.players.has(socket.id)) return;
-    if (game.answeredThisQuestion.has(socket.id)) return; // Already answered
 
-    game.answeredThisQuestion.add(socket.id);
-    
+    // Only reject if it is a FINAL submission and they've already submitted finally
+    if (!isPartial && game.answeredThisQuestion.has(socket.id)) return;
+
     const player = game.players.get(socket.id);
     const question = game.questions[game.currentQuestionIndex];
     const timeTaken = (Date.now() - game.questionStartTime) / 1000;
@@ -591,33 +534,45 @@ io.on('connection', (socket) => {
       player.lastAnswerCorrect = false;
     }
 
-    player.score += pointsAwarded;
-    player.answers[game.currentQuestionIndex] = {
-      correct: isCorrect,
-      points: pointsAwarded,
-      answer,
-      timeTaken
-    };
+    // Only apply score, answersReceived, host notification, and ending question if NOT isPartial!
+    if (!isPartial) {
+      game.answeredThisQuestion.add(socket.id);
+      player.score += pointsAwarded;
+      player.answers[game.currentQuestionIndex] = {
+        correct: isCorrect,
+        points: pointsAwarded,
+        answer,
+        timeTaken
+      };
 
-    game.answersReceived++;
+      game.answersReceived++;
 
-    // Notify Host about answers count
-    io.to(game.hostSocketId).emit('answers-count-update', {
-      count: game.answersReceived,
-      total: game.players.size
-    });
+      // Notify Host about answers count
+      io.to(game.hostSocketId).emit('answers-count-update', {
+        count: game.answersReceived,
+        total: game.players.size
+      });
 
-    // Send immediate confirmation to player
-    socket.emit('answer-accepted', {
-      correct: isCorrect,
-      score: player.score,
-      streak: player.streak,
-      isSurvey: question.type === 'survey'
-    });
+      // Send immediate confirmation to player
+      socket.emit('answer-accepted', {
+        correct: isCorrect,
+        score: player.score,
+        streak: player.streak,
+        isSurvey: question.type === 'survey'
+      });
 
-    // If everyone answered, end question immediately
-    if (game.answersReceived >= game.players.size) {
-      endQuestion(game);
+      // If everyone answered, end question immediately
+      if (game.answersReceived >= game.players.size) {
+        endQuestion(game);
+      }
+    } else {
+      // Just record the partial answer so it can be retrieved if time runs out
+      player.answers[game.currentQuestionIndex] = {
+        correct: isCorrect,
+        points: pointsAwarded,
+        answer,
+        timeTaken
+      };
     }
   });
 
@@ -691,6 +646,7 @@ function startQuestionIntro(game) {
     question: question.question,
     type: question.type,
     timeLimit: question.timeLimit,
+    maxVotes: question.maxVotes || 1,
     questionImage: question.questionimage || '',
     optionImages: question.optionImages || [],
     options: question.options || []
@@ -753,7 +709,28 @@ function endQuestion(game) {
   for (const player of game.players.values()) {
     const playerAnswer = player.answers[game.currentQuestionIndex];
     if (playerAnswer && playerAnswer.answer !== undefined && playerAnswer.answer !== null) {
-      if (question.type === 'multiple-choice' || question.type === 'true-false' || question.type === 'survey') {
+      if (question.type === 'survey') {
+        const choice = playerAnswer.answer.toString().trim().toLowerCase();
+        const choices = choice.split(',');
+        choices.forEach(ch => {
+          const trimmed = ch.trim();
+          let selectedIndex = -1;
+          const numericIndex = parseInt(trimmed, 10);
+          if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < question.options.length) {
+            selectedIndex = numericIndex;
+          } else {
+            const charCode = trimmed.charCodeAt(0) - 97;
+            if (trimmed.length === 1 && charCode >= 0 && charCode < question.options.length) {
+              selectedIndex = charCode;
+            } else {
+              selectedIndex = question.options.findIndex(opt => opt.trim().toLowerCase() === trimmed);
+            }
+          }
+          if (selectedIndex >= 0 && selectedIndex < stats.length) {
+            stats[selectedIndex]++;
+          }
+        });
+      } else if (question.type === 'multiple-choice' || question.type === 'true-false') {
         const choice = playerAnswer.answer.toString().trim().toLowerCase();
         let selectedIndex = -1;
         
@@ -865,6 +842,83 @@ function savePodiumResults(game) {
   } catch (error) {
     console.error('Failed to save podium results:', error);
   }
+}
+
+function showFinalPodium(game) {
+  game.gameState = 'PODIUM';
+  // Build podium — include all players tied at each rank position
+  const fullLeaderboard = getLeaderboard(game);
+  const podium = [];
+  let rank = 1;
+  let i = 0;
+  while (i < fullLeaderboard.length && rank <= 3) {
+    const currentScore = fullLeaderboard[i].score;
+    const tied = [];
+    while (i < fullLeaderboard.length && fullLeaderboard[i].score === currentScore) {
+      tied.push(fullLeaderboard[i]);
+      i++;
+    }
+    podium.push({ rank, players: tied, score: currentScore });
+    rank += tied.length;
+  }
+  
+  // Save podium results persistently
+  savePodiumResults(game);
+
+  // Gather all survey questions and compile their top 3 answers
+  const surveySummaries = [];
+  game.questions.forEach((q, qIdx) => {
+    if (q.type === 'survey') {
+      const counts = new Array(q.options.length).fill(0);
+      for (const player of game.players.values()) {
+        const playerAns = player.answers[qIdx];
+        if (playerAns && playerAns.answer !== undefined && playerAns.answer !== null) {
+          const choice = playerAns.answer.toString().trim().toLowerCase();
+          const choices = choice.split(',');
+          choices.forEach(ch => {
+            const trimmed = ch.trim();
+            let selectedIndex = -1;
+            const numericIndex = parseInt(trimmed, 10);
+            if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < q.options.length) {
+              selectedIndex = numericIndex;
+            } else {
+              const charCode = trimmed.charCodeAt(0) - 97;
+              if (trimmed.length === 1 && charCode >= 0 && charCode < q.options.length) {
+                selectedIndex = charCode;
+              } else {
+                selectedIndex = q.options.findIndex(opt => opt.trim().toLowerCase() === trimmed);
+              }
+            }
+            if (selectedIndex >= 0 && selectedIndex < counts.length) {
+              counts[selectedIndex]++;
+            }
+          });
+        }
+      }
+
+      // Create list of options with their final count
+      const compiledOptions = q.options.map((optText, optIdx) => ({
+        text: optText,
+        count: counts[optIdx],
+        image: (q.optionImages && q.optionImages[optIdx]) || ''
+      }));
+
+      // Sort by count descending
+      compiledOptions.sort((a, b) => b.count - a.count);
+
+      surveySummaries.push({
+        question: q.question,
+        questionImage: q.questionimage || '',
+        topChoices: compiledOptions.slice(0, 3) // Top 3 choices
+      });
+    }
+  });
+
+  io.to(`game_${game.pin}`).emit('state-changed', {
+    gameState: 'PODIUM',
+    podium,
+    surveys: surveySummaries
+  });
 }
 
 // Start Server
