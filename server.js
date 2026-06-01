@@ -523,6 +523,13 @@ function startQuestionIntro(game) {
     question: question.question,
     type: question.type,
     timeLimit: question.timeLimit,
+    questionImage: question.questionimage || '',
+    optionImages: {
+      A: question.optionaimage || '',
+      B: question.optionbimage || '',
+      C: question.optioncimage || '',
+      D: question.optiondimage || ''
+    },
     options: {
       A: question.optiona,
       B: question.optionb,

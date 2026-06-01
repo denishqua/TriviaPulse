@@ -47,17 +47,21 @@
     <!-- 4. CONTROLLER: MULTIPLE CHOICE -->
     <section id="panel-controller-mc" class="controller-panel animate-fade-in" style="display: none;">
       <div class="player-grid-buttons">
-        <button class="player-btn red" id="pbtn-opt-A">
+        <button class="player-btn red" id="pbtn-opt-A" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
           <div class="shape-tri"></div>
+          <img class="player-opt-img" id="pimg-opt-A" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
         </button>
-        <button class="player-btn blue" id="pbtn-opt-B">
+        <button class="player-btn blue" id="pbtn-opt-B" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
           <div class="shape-dia"></div>
+          <img class="player-opt-img" id="pimg-opt-B" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
         </button>
-        <button class="player-btn yellow" id="pbtn-opt-C">
+        <button class="player-btn yellow" id="pbtn-opt-C" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
           <div class="shape-cir"></div>
+          <img class="player-opt-img" id="pimg-opt-C" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
         </button>
-        <button class="player-btn green" id="pbtn-opt-D">
+        <button class="player-btn green" id="pbtn-opt-D" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
           <div class="shape-squ"></div>
+          <img class="player-opt-img" id="pimg-opt-D" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
         </button>
       </div>
     </section>
@@ -67,10 +71,12 @@
       <div class="player-tf-buttons" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
         <button class="player-btn blue" id="pbtn-tf-true" style="font-size: 2.2rem; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
           <div class="shape-dia" style="width: 28px; height: 28px; background: white; transform: rotate(45deg);"></div>
+          <img class="player-opt-img" id="pimg-tf-true" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
           <span>True</span>
         </button>
         <button class="player-btn red" id="pbtn-tf-false" style="font-size: 2.2rem; color: white; display: flex; align-items: center; justify-content: center; gap: 20px;">
           <div class="shape-tri" style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 26px solid white;"></div>
+          <img class="player-opt-img" id="pimg-tf-false" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); padding: 2px;">
           <span>False</span>
         </button>
       </div>

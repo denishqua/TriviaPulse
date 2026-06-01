@@ -30,10 +30,14 @@ const btnEnableTunnel = document.getElementById('btn-enable-tunnel');
 const introQIndex = document.getElementById('intro-q-index');
 const introQTitle = document.getElementById('intro-q-title');
 const introCountdown = document.getElementById('intro-countdown');
+const introImageContainer = document.getElementById('intro-image-container');
+const introImage = document.getElementById('intro-image');
 
 const questionQIndex = document.getElementById('question-q-index');
 const questionTimer = document.getElementById('question-timer');
 const questionQTitle = document.getElementById('question-q-title');
+const questionImageContainer = document.getElementById('question-image-container');
+const questionImage = document.getElementById('question-image');
 const questionAnswersGrid = document.getElementById('question-answers-grid');
 const questionAnswersCount = document.getElementById('question-answers-count');
 const btnShowResults = document.getElementById('btn-show-results');
@@ -42,6 +46,10 @@ const cardOptA = document.getElementById('card-opt-A');
 const cardOptB = document.getElementById('card-opt-B');
 const cardOptC = document.getElementById('card-opt-C');
 const cardOptD = document.getElementById('card-opt-D');
+const imgOptA = document.getElementById('img-opt-A');
+const imgOptB = document.getElementById('img-opt-B');
+const imgOptC = document.getElementById('img-opt-C');
+const imgOptD = document.getElementById('img-opt-D');
 const lblOptA = document.getElementById('lbl-opt-A');
 const lblOptB = document.getElementById('lbl-opt-B');
 const lblOptC = document.getElementById('lbl-opt-C');
@@ -322,6 +330,17 @@ socket.on('state-changed', (data) => {
     introQIndex.textContent = `QUESTION ${currentQuestion.index + 1} OF ${questionCount}`;
     introQTitle.textContent = currentQuestion.question;
     
+    // Render intro question image if present
+    if (introImageContainer && introImage) {
+      if (currentQuestion.questionImage) {
+        introImage.src = currentQuestion.questionImage;
+        introImageContainer.style.display = 'block';
+      } else {
+        introImage.src = '';
+        introImageContainer.style.display = 'none';
+      }
+    }
+
     const typeLabels = {
       'multiple-choice': 'Multiple Choice 📝',
       'true-false': 'True / False ⚖️',
@@ -351,6 +370,17 @@ socket.on('state-changed', (data) => {
     questionQTitle.textContent = currentQuestion.question;
     questionAnswersCount.textContent = '0';
     
+    // Render active question image if present
+    if (questionImageContainer && questionImage) {
+      if (currentQuestion.questionImage) {
+        questionImage.src = currentQuestion.questionImage;
+        questionImageContainer.style.display = 'block';
+      } else {
+        questionImage.src = '';
+        questionImageContainer.style.display = 'none';
+      }
+    }
+
     const typeLabels = {
       'multiple-choice': 'Multiple Choice 📝',
       'true-false': 'True / False ⚖️',
@@ -378,6 +408,21 @@ socket.on('state-changed', (data) => {
       lblOptB.textContent = currentQuestion.options.B;
       lblOptC.textContent = currentQuestion.options.C;
       lblOptD.textContent = currentQuestion.options.D;
+
+      // Handle option images
+      const optImgs = currentQuestion.optionImages || {};
+      ['A', 'B', 'C', 'D'].forEach(opt => {
+        const imgEl = document.getElementById(`img-opt-${opt}`);
+        if (imgEl) {
+          if (optImgs[opt]) {
+            imgEl.src = optImgs[opt];
+            imgEl.style.display = 'block';
+          } else {
+            imgEl.src = '';
+            imgEl.style.display = 'none';
+          }
+        }
+      });
     } else if (currentQuestion.type === 'true-false') {
       questionAnswersGrid.style.display = 'grid';
       questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
@@ -396,6 +441,30 @@ socket.on('state-changed', (data) => {
       
       lblOptA.textContent = 'True';
       lblOptB.textContent = 'False';
+
+      // Reset option images for True/False
+      const optImgs = currentQuestion.optionImages || {};
+      const imgTrue = document.getElementById('img-opt-A');
+      const imgFalse = document.getElementById('img-opt-B');
+      
+      if (imgTrue) {
+        if (optImgs.A) {
+          imgTrue.src = optImgs.A;
+          imgTrue.style.display = 'block';
+        } else {
+          imgTrue.src = '';
+          imgTrue.style.display = 'none';
+        }
+      }
+      if (imgFalse) {
+        if (optImgs.B) {
+          imgFalse.src = optImgs.B;
+          imgFalse.style.display = 'block';
+        } else {
+          imgFalse.src = '';
+          imgFalse.style.display = 'none';
+        }
+      }
     } else if (currentQuestion.type === 'short-answer') {
       // Hide standard options grid for short answer
       questionAnswersGrid.style.display = 'none';

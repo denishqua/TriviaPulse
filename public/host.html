@@ -82,6 +82,10 @@
       </div>
       <div class="q-title glow-text" id="intro-q-title">What is the capital of France?</div>
       
+      <div id="intro-image-container" class="glass-panel" style="display: none; align-self: center; max-height: 200px; margin-top: 15px; margin-bottom: 15px; padding: 8px; border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, 0.03); border-color: rgba(255,255,255,0.1);">
+        <img id="intro-image" src="" alt="Question Image" style="max-height: 184px; max-width: 320px; object-fit: contain; border-radius: 12px;">
+      </div>
+
       <div class="intro-countdown-container">
         <div class="intro-number" id="intro-countdown">3</div>
       </div>
@@ -99,23 +103,31 @@
 
       <div class="q-title" id="question-q-title">What is the capital of France?</div>
 
+      <div id="question-image-container" class="glass-panel" style="display: none; align-self: center; max-height: 240px; margin-bottom: 25px; padding: 10px; border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, 0.03); border-color: rgba(255,255,255,0.1); width: fit-content; margin-left: auto; margin-right: auto;">
+        <img id="question-image" src="" alt="Question Image" style="max-height: 220px; max-width: 480px; object-fit: contain; border-radius: 12px;">
+      </div>
+
       <div class="host-grid-panel">
         <!-- Visual cues for answers (for players to see options on host screen) -->
         <div class="answers-grid" id="question-answers-grid">
-          <div class="answer-card red" id="card-opt-A">
+          <div class="answer-card red" id="card-opt-A" style="display: flex; align-items: center;">
             <div class="answer-shape"><div class="shape-tri"></div></div>
+            <img class="answer-opt-image" id="img-opt-A" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
             <span class="option-text" id="lbl-opt-A">Paris</span>
           </div>
-          <div class="answer-card blue" id="card-opt-B">
+          <div class="answer-card blue" id="card-opt-B" style="display: flex; align-items: center;">
             <div class="answer-shape"><div class="shape-dia"></div></div>
+            <img class="answer-opt-image" id="img-opt-B" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
             <span class="option-text" id="lbl-opt-B">London</span>
           </div>
-          <div class="answer-card yellow" id="card-opt-C">
+          <div class="answer-card yellow" id="card-opt-C" style="display: flex; align-items: center;">
             <div class="answer-shape"><div class="shape-cir"></div></div>
+            <img class="answer-opt-image" id="img-opt-C" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
             <span class="option-text" id="lbl-opt-C">Berlin</span>
           </div>
-          <div class="answer-card green" id="card-opt-D">
+          <div class="answer-card green" id="card-opt-D" style="display: flex; align-items: center;">
             <div class="answer-shape"><div class="shape-squ"></div></div>
+            <img class="answer-opt-image" id="img-opt-D" src="" alt="" style="display: none; width: 42px; height: 42px; object-fit: contain; border-radius: 8px; margin-right: 15px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); padding: 2px;">
             <span class="option-text" id="lbl-opt-D">Rome</span>
           </div>
         </div>

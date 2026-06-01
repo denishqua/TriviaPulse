@@ -118,8 +118,45 @@ socket.on('state-changed', (data) => {
 
     if (currentQuestionType === 'multiple-choice') {
       showPanel(panelControllerMc);
+      
+      const optImgs = data.question.optionImages || {};
+      ['A', 'B', 'C', 'D'].forEach(opt => {
+        const imgEl = document.getElementById(`pimg-opt-${opt}`);
+        if (imgEl) {
+          if (optImgs[opt]) {
+            imgEl.src = optImgs[opt];
+            imgEl.style.display = 'block';
+          } else {
+            imgEl.src = '';
+            imgEl.style.display = 'none';
+          }
+        }
+      });
     } else if (currentQuestionType === 'true-false') {
       showPanel(panelControllerTf);
+      
+      const optImgs = data.question.optionImages || {};
+      const imgTrue = document.getElementById('pimg-tf-true');
+      const imgFalse = document.getElementById('pimg-tf-false');
+      
+      if (imgTrue) {
+        if (optImgs.A) {
+          imgTrue.src = optImgs.A;
+          imgTrue.style.display = 'block';
+        } else {
+          imgTrue.src = '';
+          imgTrue.style.display = 'none';
+        }
+      }
+      if (imgFalse) {
+        if (optImgs.B) {
+          imgFalse.src = optImgs.B;
+          imgFalse.style.display = 'block';
+        } else {
+          imgFalse.src = '';
+          imgFalse.style.display = 'none';
+        }
+      }
     } else if (currentQuestionType === 'short-answer') {
       inputShortAnswer.value = ''; // Reset input
       showPanel(panelControllerSa);
