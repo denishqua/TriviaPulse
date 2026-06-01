@@ -1023,83 +1023,70 @@ socket.on('state-changed', (data) => {
           3: { id: '3rd', medalClass: 'bronze', nameSize: '1.2rem', numSize: '2.5rem', order: 3 },
         };
 
-        podium.forEach((slot, slotIdx) => {
+        let columnIdx = 0;
+        podium.forEach((slot) => {
           const meta = rankMeta[slot.rank];
           if (!meta) return;
 
-          const slotEl = document.createElement('div');
-          slotEl.className = 'podium-column';
-          slotEl.style.opacity = '0';
-          slotEl.style.transform = 'translateY(80px)';
-          slotEl.style.transition = 'none';
-          slotEl.style.order = meta.order; // Display columns in: 2nd (left), 1st (center), 3rd (right)
-
-          // Wider slot when multiple players share the rank
-          const isTied = slot.players && slot.players.length > 1;
-          if (isTied) slotEl.style.width = `${Math.min(slot.players.length * 160, 400)}px`;
-
-          // Names row
-          const namesWrapper = document.createElement('div');
-          namesWrapper.style.display = 'flex';
-          namesWrapper.style.flexDirection = 'column';
-          namesWrapper.style.alignItems = 'center';
-          namesWrapper.style.gap = '4px';
-          namesWrapper.style.marginBottom = '12px';
-          namesWrapper.style.width = '100%';
-
           if (slot.players) {
             slot.players.forEach(p => {
+              const slotEl = document.createElement('div');
+              slotEl.className = 'podium-column';
+              slotEl.style.opacity = '0';
+              slotEl.style.transform = 'translateY(80px)';
+              slotEl.style.transition = 'none';
+              slotEl.style.order = meta.order; // Display columns in: 2nd (left), 1st (center), 3rd (right)
+
+              // Names row
+              const namesWrapper = document.createElement('div');
+              namesWrapper.style.display = 'flex';
+              namesWrapper.style.flexDirection = 'column';
+              namesWrapper.style.alignItems = 'center';
+              namesWrapper.style.gap = '4px';
+              namesWrapper.style.marginBottom = '12px';
+              namesWrapper.style.width = '100%';
+
               const nameEl = document.createElement('div');
               nameEl.className = 'podium-player-name';
-              nameEl.style.fontSize = isTied ? '1.1rem' : meta.nameSize;
+              nameEl.style.fontSize = meta.nameSize;
               nameEl.style.marginBottom = '0';
               nameEl.textContent = p.nickname; // Secure and avoids double-escaping issues
               namesWrapper.appendChild(nameEl);
+              slotEl.appendChild(namesWrapper);
+
+              // Pedestal
+              const pedestal = document.createElement('div');
+              pedestal.className = `podium-pedestal ${meta.medalClass}`;
+
+              const rankNum = document.createElement('span');
+              rankNum.className = 'podium-rank-num';
+              rankNum.style.fontSize = meta.numSize;
+              rankNum.textContent = slot.rank;
+              pedestal.appendChild(rankNum);
+
+              const scoreEl = document.createElement('span');
+              scoreEl.className = 'podium-score';
+              scoreEl.textContent = `${slot.score} pts`;
+              pedestal.appendChild(scoreEl);
+
+              slotEl.appendChild(pedestal);
+              podiumContainer.appendChild(slotEl);
+
+              // Animate in sequentially based on physical layout index
+              const currentIdx = columnIdx;
+              setTimeout(() => {
+                slotEl.style.transition = 'opacity 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                slotEl.style.opacity = '1';
+                slotEl.style.transform = 'translateY(0)';
+                setTimeout(() => slotEl.classList.add('animate-float'), 600);
+                if (slot.rank === 1) {
+                  setTimeout(() => slotEl.classList.add('podium-champion-flash'), 300);
+                }
+              }, 500 + currentIdx * 800);
+
+              columnIdx++;
             });
           }
-          slotEl.appendChild(namesWrapper);
-
-          // Pedestal
-          const pedestal = document.createElement('div');
-          pedestal.className = `podium-pedestal ${meta.medalClass}`;
-
-          const rankNum = document.createElement('span');
-          rankNum.className = 'podium-rank-num';
-          rankNum.style.fontSize = meta.numSize;
-          rankNum.textContent = slot.rank;
-          pedestal.appendChild(rankNum);
-
-          // Tied badge
-          if (isTied) {
-            const tieBadge = document.createElement('span');
-            tieBadge.style.fontSize = '0.75rem';
-            tieBadge.style.fontWeight = '700';
-            tieBadge.style.color = 'rgba(255,255,255,0.6)';
-            tieBadge.style.letterSpacing = '1px';
-            tieBadge.style.textTransform = 'uppercase';
-            tieBadge.style.marginTop = '4px';
-            tieBadge.textContent = `TIE — ${slot.players.length} players`;
-            pedestal.appendChild(tieBadge);
-          }
-
-          const scoreEl = document.createElement('span');
-          scoreEl.className = 'podium-score';
-          scoreEl.textContent = `${slot.score} pts`;
-          pedestal.appendChild(scoreEl);
-
-          slotEl.appendChild(pedestal);
-          podiumContainer.appendChild(slotEl);
-
-          // Animate in sequentially based on physical layout index
-          setTimeout(() => {
-            slotEl.style.transition = 'opacity 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            slotEl.style.opacity = '1';
-            slotEl.style.transform = 'translateY(0)';
-            setTimeout(() => slotEl.classList.add('animate-float'), 600);
-            if (slot.rank === 1) {
-              setTimeout(() => slotEl.classList.add('podium-champion-flash'), 300);
-            }
-          }, 500 + slotIdx * 800);
         });
       }
 
