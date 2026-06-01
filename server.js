@@ -26,6 +26,7 @@ let tunnelProcess = null;
 app.use(express.static(path.join(__dirname, 'public')));
 // Serve static files from the 'quizzes' directory to allow quiz-encapsulated assets
 app.use('/quizzes', express.static(path.join(__dirname, 'quizzes')));
+app.use('/sample_quizzes', express.static(path.join(__dirname, 'sample_quizzes')));
 app.use(express.json());
 
 // In-memory game sessions
@@ -80,36 +81,26 @@ function parseCSV(text) {
   return lines;
 }
 
-// API Endpoint to list available quizzes
-app.get('/api/quizzes', (req, res) => {
-  const quizzesDir = path.join(__dirname, 'quizzes');
+function scanQuizzesDir(dirName) {
+  const fullPath = path.join(__dirname, dirName);
+  if (!fs.existsSync(fullPath)) return [];
   
-  // Ensure quizzes directory exists
-  if (!fs.existsSync(quizzesDir)) {
-    fs.mkdirSync(quizzesDir);
-  }
-
-  fs.readdir(quizzesDir, { withFileTypes: true }, (err, dirents) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to read quizzes directory' });
-    }
-    
+  try {
+    const dirents = fs.readdirSync(fullPath, { withFileTypes: true });
     const quizFiles = [];
     
     for (const dirent of dirents) {
       if (dirent.isDirectory()) {
         const subfolder = dirent.name;
-        const subfolderPath = path.join(quizzesDir, subfolder);
+        const subfolderPath = path.join(fullPath, subfolder);
         
         try {
           const subFiles = fs.readdirSync(subfolderPath);
           const quizFile = subFiles.find(f => f.endsWith('.csv') || f.endsWith('.json'));
           
           if (quizFile) {
-            const ext = path.extname(quizFile);
             quizFiles.push({
-              // ID is the relative path (e.g. 'general_knowledge/general_knowledge.csv')
-              id: `${subfolder}/${quizFile}`,
+              id: `${dirName}/${subfolder}/${quizFile}`,
               name: subfolder.replace(/_/g, ' ').toUpperCase()
             });
           }
@@ -118,10 +109,31 @@ app.get('/api/quizzes', (req, res) => {
         }
       }
     }
+    return quizFiles;
+  } catch (err) {
+    console.error(`Failed to read directory ${dirName}:`, err);
+    return [];
+  }
+}
+
+// API Endpoint to list available quizzes
+app.get('/api/quizzes', (req, res) => {
+  const quizzesDir = path.join(__dirname, 'quizzes');
+  if (!fs.existsSync(quizzesDir)) {
+    fs.mkdirSync(quizzesDir);
+  }
+
+  const sampleQuizzesDir = path.join(__dirname, 'sample_quizzes');
+  if (!fs.existsSync(sampleQuizzesDir)) {
+    fs.mkdirSync(sampleQuizzesDir);
+  }
+
+  const sampleQuizzes = scanQuizzesDir('sample_quizzes');
+  const userQuizzes = scanQuizzesDir('quizzes');
+  const combinedQuizzes = [...sampleQuizzes, ...userQuizzes];
       
-    const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
-    res.json({ quizzes: quizFiles, localIp: resolvedIp, port: PORT });
-  });
+  const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
+  res.json({ quizzes: combinedQuizzes, localIp: resolvedIp, port: PORT });
 });
 
 // Real-time communication via Socket.IO
@@ -134,7 +146,12 @@ io.on('connection', (socket) => {
 
   // Host creates a game lobby
   socket.on('host-create-game', ({ quizId }) => {
-    const quizPath = path.join(__dirname, 'quizzes', quizId);
+    let quizPath;
+    if (quizId.startsWith('quizzes/') || quizId.startsWith('sample_quizzes/')) {
+      quizPath = path.join(__dirname, quizId);
+    } else {
+      quizPath = path.join(__dirname, 'quizzes', quizId);
+    }
     
     if (!fs.existsSync(quizPath)) {
       return socket.emit('error-msg', { message: 'Selected quiz not found.' });

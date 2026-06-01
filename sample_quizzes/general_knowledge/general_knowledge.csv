@@ -1,0 +1,9 @@
+Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer,QuestionImage,OptionAImage,OptionBImage,OptionCImage,OptionDImage,maxVotes
+multiple-choice,"Which planet is known as the Red Planet?",20,"Earth","Mars","Jupiter","Saturn","Mars","sample_quizzes/general_knowledge/mars.svg","sample_quizzes/general_knowledge/earth.svg","sample_quizzes/general_knowledge/mars.svg","sample_quizzes/general_knowledge/jupiter.svg","sample_quizzes/general_knowledge/saturn.svg",1
+true-false,"The Great Wall of China is visible from space.",15,"True","False",,,"False",,,,,1
+short-answer,"What is the capital city of France?",20,,,,,"Paris",,,,,1
+multiple-choice,"Who painted the Mona Lisa?",20,"Vincent van Gogh","Pablo Picasso","Leonardo da Vinci","Michelangelo","Leonardo da Vinci","sample_quizzes/general_knowledge/shapes.svg",,,,,1
+multiple-choice,"What is the powerhouse of the cell?",15,"Ribosome","Mitochondria","Nucleus","Chloroplast","Mitochondria",,,,,1
+true-false,"Water boils at 100 degrees Celsius at sea level.",10,"True","False",,,"True",,,,,1
+short-answer,"How many continents are there on Earth?",15,,,,,"7",,,,,1
+survey,"Select your top two favorite seasons!",30,"Spring","Summer","Autumn","Winter",,"sample_quizzes/dynamic_colors_test/nebula.svg",,,,,2
