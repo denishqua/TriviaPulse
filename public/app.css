@@ -283,15 +283,83 @@ select {
   border: 1px dashed var(--border-light);
 }
 
-.player-bubble {
+.player-lobby-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-light);
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  min-width: 220px;
+  max-width: 280px;
   box-shadow: var(--shadow-btn);
   animation: fade-in 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.player-lobby-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--purple-neon);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.25);
+}
+
+.player-lobby-avatar {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.player-lobby-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 25px; /* Leave space for kick cross */
+}
+
+/* Avatar Picker Styles */
+.avatar-option {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.avatar-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.15) translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.avatar-option.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: var(--purple-neon);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+  transform: scale(1.15);
 }
 
 /* Host Game Screen */

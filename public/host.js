@@ -177,45 +177,52 @@ socket.on('tunnel-url-updated', (data) => {
 
 function renderLobbyPlayers(players) {
   lobbyPlayersGrid.innerHTML = '';
-  players.forEach(nickname => {
-    const bubble = document.createElement('div');
-    bubble.className = 'player-bubble';
-    bubble.style.position = 'relative';
-    bubble.style.cursor = 'pointer';
-    bubble.style.paddingRight = '35px'; // Leave space for kick cross button
+  players.forEach(p => {
+    const nickname = p.nickname;
+    const avatar = p.avatar || '👾';
     
-    // Create text element
+    const card = document.createElement('div');
+    card.className = 'player-lobby-card';
+    
+    // Avatar element
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'player-lobby-avatar';
+    avatarDiv.textContent = avatar;
+    card.appendChild(avatarDiv);
+    
+    // Name element
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'player-lobby-name';
     nameSpan.textContent = nickname;
-    bubble.appendChild(nameSpan);
+    card.appendChild(nameSpan);
     
     // Create kick cross button (styled beautifully)
     const kickBtn = document.createElement('span');
-    kickBtn.innerHTML = ' &times;';
+    kickBtn.innerHTML = '&times;';
     kickBtn.style.color = 'var(--red-tri)';
     kickBtn.style.fontWeight = 'bold';
-    kickBtn.style.fontSize = '1.3rem';
+    kickBtn.style.fontSize = '1.6rem';
     kickBtn.style.position = 'absolute';
-    kickBtn.style.right = '12px';
+    kickBtn.style.right = '16px';
     kickBtn.style.top = '50%';
-    kickBtn.style.transform = 'translateY(-55%)';
+    kickBtn.style.transform = 'translateY(-50%)';
     kickBtn.style.cursor = 'pointer';
     kickBtn.style.transition = 'transform 0.2s';
     
-    kickBtn.addEventListener('mouseenter', () => { kickBtn.style.transform = 'translateY(-55%) scale(1.3)'; });
-    kickBtn.addEventListener('mouseleave', () => { kickBtn.style.transform = 'translateY(-55%) scale(1)'; });
+    kickBtn.addEventListener('mouseenter', () => { kickBtn.style.transform = 'translateY(-50%) scale(1.3)'; });
+    kickBtn.addEventListener('mouseleave', () => { kickBtn.style.transform = 'translateY(-50%) scale(1)'; });
     
-    bubble.appendChild(kickBtn);
+    card.appendChild(kickBtn);
     
-    // Clicking the bubble triggers the kick confirmation dialog
-    bubble.addEventListener('click', (e) => {
+    // Clicking the card triggers the kick confirmation dialog
+    card.addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm(`Remove player "${nickname}" from the lobby?`)) {
         socket.emit('host-kick-player', { nickname });
       }
     });
     
-    lobbyPlayersGrid.appendChild(bubble);
+    lobbyPlayersGrid.appendChild(card);
   });
 }
 
@@ -301,8 +308,11 @@ socket.on('state-changed', (data) => {
   const state = data.gameState;
   console.log('State changed:', state);
 
-  if (state === 'INTRO') {
+  if (data.question) {
     currentQuestion = data.question;
+  }
+
+  if (state === 'INTRO') {
     
     // Configure question details
     introQIndex.textContent = `QUESTION ${currentQuestion.index + 1} OF ${questionCount}`;

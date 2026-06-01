@@ -32,6 +32,16 @@
         <label for="input-nickname">Choose Nickname</label>
         <input type="text" id="input-nickname" placeholder="Your name (max 16 chars)" maxlength="16" autofocus>
       </div>
+      <div class="form-group" style="margin-top: 20px; margin-bottom: 20px;">
+        <label style="margin-bottom: 8px; display: block;">Choose Avatar</label>
+        <div id="avatar-picker" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 10px 0;">
+          <!-- Populated dynamically in player.js -->
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 15px;">
+          <span style="font-size: 0.9rem; color: var(--text-secondary);">Or type a custom emoji:</span>
+          <input type="text" id="input-custom-avatar" placeholder="😎" maxlength="2" style="width: 60px; text-align: center; font-size: 1.3rem; padding: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-light); border-radius: 8px;">
+        </div>
+      </div>
       <button id="btn-submit-nickname" class="btn-primary btn-block">Enter Lobby</button>
       <div id="nickname-error" style="color: var(--red-tri); margin-top: 15px; text-align: center; font-weight: 600;"></div>
     </section>
@@ -39,10 +49,12 @@
     <!-- 3. LOBBY WAITING ROOM -->
     <section id="panel-lobby-wait" class="wait-container glass-panel animate-fade-in" style="display: none;">
       <div class="spinner"></div>
-      <div class="wait-nickname" id="wait-player-name">Player</div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+        <span id="wait-player-avatar" style="font-size: 2.5rem; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.25); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">👾</span>
+        <div class="wait-nickname" id="wait-player-name" style="margin-bottom: 0;">Player</div>
+      </div>
       <p style="color: var(--text-secondary); font-size: 1.2rem;">You're in! Check your name on the host projector screen.</p>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 20px;">Waiting for the host to start the game...</p>
-    </section>
 
     <!-- 4. CONTROLLER: MULTIPLE CHOICE -->
     <section id="panel-controller-mc" class="controller-panel animate-fade-in" style="display: none;">

@@ -335,7 +335,7 @@ io.on('connection', (socket) => {
       io.to(game.hostSocketId).emit('player-left', {
         nickname: playerDetails.nickname,
         playerCount: game.players.size,
-        players: Array.from(game.players.values()).map(p => p.nickname)
+        players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
       });
     }
   });
@@ -404,7 +404,7 @@ io.on('connection', (socket) => {
   // ----------------------------------------------------
 
   // Player joins lobby
-  socket.on('player-join', ({ nickname }) => {
+  socket.on('player-join', ({ nickname, avatar }) => {
     const pin = 'local_game';
     const game = games.get(pin);
     if (!game) {
@@ -427,10 +427,12 @@ io.on('connection', (socket) => {
     }
 
     const cleanNickname = nickname.trim().substring(0, 16);
+    const cleanAvatar = avatar ? avatar.trim().substring(0, 2) : '👾';
 
     const player = {
       socketId: socket.id,
       nickname: cleanNickname,
+      avatar: cleanAvatar,
       score: 0,
       streak: 0,
       answers: {}, // questionIndex -> { correct, points, answer, timeTaken }
@@ -444,6 +446,7 @@ io.on('connection', (socket) => {
       success: true,
       pin,
       nickname: cleanNickname,
+      avatar: cleanAvatar,
       gameState: 'LOBBY'
     });
 
@@ -451,7 +454,7 @@ io.on('connection', (socket) => {
     io.to(game.hostSocketId).emit('player-joined', {
       nickname: cleanNickname,
       playerCount: game.players.size,
-      players: Array.from(game.players.values()).map(p => p.nickname)
+      players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
     });
 
     console.log(`Player ${cleanNickname} joined the local lobby`);
@@ -577,7 +580,7 @@ io.on('connection', (socket) => {
           io.to(game.hostSocketId).emit('player-left', {
             nickname: player.nickname,
             playerCount: game.players.size,
-            players: Array.from(game.players.values()).map(p => p.nickname)
+            players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
           });
         } else if (game.gameState === 'QUESTION') {
           // Update answer count triggers if a player leaves during active question

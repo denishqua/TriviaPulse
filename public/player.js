@@ -29,6 +29,53 @@ const btnSubmitShortAnswer = document.getElementById('btn-submit-short-answer');
 
 const playerWaitMessage = document.getElementById('player-wait-message');
 
+// Avatar UI Selectors
+const avatarPicker = document.getElementById('avatar-picker');
+const inputCustomAvatar = document.getElementById('input-custom-avatar');
+const waitPlayerAvatar = document.getElementById('wait-player-avatar');
+
+// Predefined cool game emojis for instant selection
+const defaultEmojis = ['👾', '🚀', '🦊', '🦄', '🐼', '🐯', '🦖', '🍕', '🍩', '🥑', '🎮', '🎲', '🏆', '💎', '🎸', '⚡', '🔥', '🌈', '🔮', '🛸'];
+let selectedAvatar = defaultEmojis[Math.floor(Math.random() * defaultEmojis.length)];
+
+// Render predefined avatar options
+if (avatarPicker) {
+  defaultEmojis.forEach(emoji => {
+    const opt = document.createElement('div');
+    opt.className = 'avatar-option';
+    opt.textContent = emoji;
+    if (emoji === selectedAvatar) {
+      opt.classList.add('active');
+    }
+    
+    opt.addEventListener('click', () => {
+      if (inputCustomAvatar) inputCustomAvatar.value = '';
+      document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('active'));
+      opt.classList.add('active');
+      selectedAvatar = emoji;
+    });
+    
+    avatarPicker.appendChild(opt);
+  });
+}
+
+// Listen to custom emoji typing
+if (inputCustomAvatar) {
+  inputCustomAvatar.addEventListener('input', () => {
+    const customVal = inputCustomAvatar.value.trim();
+    if (customVal) {
+      document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('active'));
+      selectedAvatar = customVal;
+    } else {
+      const activeOpt = document.querySelector('.avatar-option');
+      if (activeOpt) {
+        activeOpt.classList.add('active');
+        selectedAvatar = activeOpt.textContent;
+      }
+    }
+  });
+}
+
 // Feedback details
 const lblFeedbackPointsGained = document.getElementById('lbl-feedback-points-gained');
 const lblFeedbackStreak = document.getElementById('lbl-feedback-streak');
@@ -45,15 +92,22 @@ btnSubmitNickname.addEventListener('click', () => {
   }
   nicknameError.textContent = '';
   
+  const avatar = (inputCustomAvatar && inputCustomAvatar.value.trim()) || selectedAvatar;
+  
   // Send join payload to server
-  socket.emit('player-join', { nickname });
+  socket.emit('player-join', { nickname, avatar });
 });
 
 // Join Response
 socket.on('join-response', (data) => {
   if (data.success) {
     myNickname = data.nickname;
-    playerNicknameHeader.textContent = myNickname;
+    const avatar = data.avatar || '👾';
+    
+    playerNicknameHeader.innerHTML = `<span style="margin-right: 8px;">${avatar}</span>${myNickname}`;
+    if (waitPlayerAvatar) {
+      waitPlayerAvatar.textContent = avatar;
+    }
     waitPlayerName.textContent = myNickname;
     
     panelJoinNickname.style.display = 'none';
