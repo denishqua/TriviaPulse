@@ -709,6 +709,7 @@ socket.on('state-changed', (data) => {
       ];
       
       tfConfig.forEach(cfg => {
+        if (cfg.count === 0) return;
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
         barWrapper.style.width = wrapperWidth;
@@ -783,9 +784,10 @@ socket.on('state-changed', (data) => {
       const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
       
       currentQuestion.options.forEach((optText, idx) => {
+        const count = stats[idx] || 0;
+        if (count === 0) return;
         const color = colors[idx % colors.length];
         const shape = shapes[idx % shapes.length];
-        const count = stats[idx] || 0;
         const optImg = (currentQuestion.optionImages && currentQuestion.optionImages[idx]) || '';
         
         const barWrapper = document.createElement('div');
@@ -874,6 +876,7 @@ socket.on('state-changed', (data) => {
       mappedOptions.sort((a, b) => b.count - a.count);
 
       mappedOptions.forEach(opt => {
+        if (opt.count === 0) return;
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
         barWrapper.style.width = wrapperWidth;
