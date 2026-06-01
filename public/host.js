@@ -395,25 +395,26 @@ socket.on('state-changed', (data) => {
         
         const shapeWrapper = document.createElement('div');
         shapeWrapper.className = 'answer-shape';
-        const shapeIcon = document.createElement('div');
-        shapeIcon.className = `shape-${shape}`;
-        shapeWrapper.appendChild(shapeIcon);
-        card.appendChild(shapeWrapper);
         
         if (optImg) {
           const img = document.createElement('img');
           img.className = 'answer-opt-image';
           img.src = optImg;
-          img.style.width = '42px';
-          img.style.height = '42px';
+          img.style.width = '36px';
+          img.style.height = '36px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '8px';
-          img.style.marginRight = '15px';
-          img.style.border = '1.5px solid rgba(255,255,255,0.25)';
-          img.style.background = 'rgba(255,255,255,0.05)';
+          img.style.borderRadius = '6px';
+          img.style.border = '1px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
           img.style.padding = '2px';
-          card.appendChild(img);
+          shapeWrapper.appendChild(img);
+        } else {
+          const shapeIcon = document.createElement('div');
+          shapeIcon.className = `shape-${shape}`;
+          shapeWrapper.appendChild(shapeIcon);
         }
+        
+        card.appendChild(shapeWrapper);
         
         const textSpan = document.createElement('span');
         textSpan.className = 'option-text';
@@ -440,25 +441,26 @@ socket.on('state-changed', (data) => {
         
         const shapeWrapper = document.createElement('div');
         shapeWrapper.className = 'answer-shape';
-        const shapeIcon = document.createElement('div');
-        shapeIcon.className = `shape-${cfg.shape}`;
-        shapeWrapper.appendChild(shapeIcon);
-        card.appendChild(shapeWrapper);
         
         if (cfg.img) {
           const img = document.createElement('img');
           img.className = 'answer-opt-image';
           img.src = cfg.img;
-          img.style.width = '42px';
-          img.style.height = '42px';
+          img.style.width = '36px';
+          img.style.height = '36px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '8px';
-          img.style.marginRight = '15px';
-          img.style.border = '1.5px solid rgba(255,255,255,0.25)';
-          img.style.background = 'rgba(255,255,255,0.05)';
+          img.style.borderRadius = '6px';
+          img.style.border = '1px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
           img.style.padding = '2px';
-          card.appendChild(img);
+          shapeWrapper.appendChild(img);
+        } else {
+          const shapeIcon = document.createElement('div');
+          shapeIcon.className = `shape-${cfg.shape}`;
+          shapeWrapper.appendChild(shapeIcon);
         }
+        
+        card.appendChild(shapeWrapper);
         
         const textSpan = document.createElement('span');
         textSpan.className = 'option-text';
@@ -586,18 +588,29 @@ socket.on('state-changed', (data) => {
         labelDiv.style.gap = '8px';
         labelDiv.style.marginTop = '10px';
         
-        const shapeIcon = document.createElement('div');
-        if (cfg.shape === 'tri') {
-          shapeIcon.className = 'shape-tri';
-          shapeIcon.style.borderBottomWidth = '20px';
-          shapeIcon.style.borderLeftWidth = '12px';
-          shapeIcon.style.borderRightWidth = '12px';
+        if (cfg.img) {
+          const img = document.createElement('img');
+          img.src = cfg.img;
+          img.style.width = '24px';
+          img.style.height = '24px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '4px';
+          img.style.border = '1px solid rgba(255,255,255,0.2)';
+          labelDiv.appendChild(img);
         } else {
-          shapeIcon.className = `shape-${cfg.shape}`;
-          shapeIcon.style.width = '18px';
-          shapeIcon.style.height = '18px';
+          const shapeIcon = document.createElement('div');
+          if (cfg.shape === 'tri') {
+            shapeIcon.className = 'shape-tri';
+            shapeIcon.style.borderBottomWidth = '20px';
+            shapeIcon.style.borderLeftWidth = '12px';
+            shapeIcon.style.borderRightWidth = '12px';
+          } else {
+            shapeIcon.className = `shape-${cfg.shape}`;
+            shapeIcon.style.width = '18px';
+            shapeIcon.style.height = '18px';
+          }
+          labelDiv.appendChild(shapeIcon);
         }
-        labelDiv.appendChild(shapeIcon);
         
         const textSpan = document.createElement('span');
         textSpan.style.fontSize = '0.85rem';
@@ -624,6 +637,7 @@ socket.on('state-changed', (data) => {
         const color = colors[idx % colors.length];
         const shape = shapes[idx % shapes.length];
         const count = stats[idx] || 0;
+        const optImg = (currentQuestion.optionImages && currentQuestion.optionImages[idx]) || '';
         
         const barWrapper = document.createElement('div');
         barWrapper.className = 'chart-bar-wrapper';
@@ -648,18 +662,29 @@ socket.on('state-changed', (data) => {
         labelDiv.style.gap = '8px';
         labelDiv.style.marginTop = '10px';
         
-        const shapeIcon = document.createElement('div');
-        if (shape === 'tri') {
-          shapeIcon.className = 'shape-tri';
-          shapeIcon.style.borderBottomWidth = '20px';
-          shapeIcon.style.borderLeftWidth = '12px';
-          shapeIcon.style.borderRightWidth = '12px';
+        if (optImg) {
+          const img = document.createElement('img');
+          img.src = optImg;
+          img.style.width = '24px';
+          img.style.height = '24px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '4px';
+          img.style.border = '1px solid rgba(255,255,255,0.2)';
+          labelDiv.appendChild(img);
         } else {
-          shapeIcon.className = `shape-${shape}`;
-          shapeIcon.style.width = '18px';
-          shapeIcon.style.height = '18px';
+          const shapeIcon = document.createElement('div');
+          if (shape === 'tri') {
+            shapeIcon.className = 'shape-tri';
+            shapeIcon.style.borderBottomWidth = '20px';
+            shapeIcon.style.borderLeftWidth = '12px';
+            shapeIcon.style.borderRightWidth = '12px';
+          } else {
+            shapeIcon.className = `shape-${shape}`;
+            shapeIcon.style.width = '18px';
+            shapeIcon.style.height = '18px';
+          }
+          labelDiv.appendChild(shapeIcon);
         }
-        labelDiv.appendChild(shapeIcon);
         
         const textSpan = document.createElement('span');
         textSpan.style.fontSize = '0.85rem';

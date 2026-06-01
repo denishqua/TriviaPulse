@@ -141,22 +141,22 @@ socket.on('state-changed', (data) => {
         btn.style.justifyContent = 'center';
         btn.style.gap = '10px';
         
-        const shapeDiv = document.createElement('div');
-        shapeDiv.className = `shape-${shape}`;
-        btn.appendChild(shapeDiv);
-        
         if (optImgs[idx]) {
           const img = document.createElement('img');
           img.className = 'player-opt-img';
           img.src = optImgs[idx];
-          img.style.width = '42px';
-          img.style.height = '42px';
+          img.style.width = '56px';
+          img.style.height = '56px';
           img.style.objectFit = 'contain';
           img.style.borderRadius = '8px';
-          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          img.style.border = '1.5px solid rgba(255,255,255,0.35)';
           img.style.background = 'rgba(255,255,255,0.1)';
           img.style.padding = '2px';
           btn.appendChild(img);
+        } else {
+          const shapeDiv = document.createElement('div');
+          shapeDiv.className = `shape-${shape}`;
+          btn.appendChild(shapeDiv);
         }
         
         btn.addEventListener('click', () => {
@@ -172,23 +172,31 @@ socket.on('state-changed', (data) => {
       const optImgs = data.question.optionImages || [];
       const imgTrue = document.getElementById('pimg-tf-true');
       const imgFalse = document.getElementById('pimg-tf-false');
+      const btnTrue = document.getElementById('pbtn-tf-true');
+      const btnFalse = document.getElementById('pbtn-tf-false');
+      const shapeTrue = btnTrue.querySelector('.shape-dia');
+      const shapeFalse = btnFalse.querySelector('.shape-tri');
       
       if (imgTrue) {
         if (optImgs[0]) {
           imgTrue.src = optImgs[0];
           imgTrue.style.display = 'block';
+          if (shapeTrue) shapeTrue.style.display = 'none';
         } else {
           imgTrue.src = '';
           imgTrue.style.display = 'none';
+          if (shapeTrue) shapeTrue.style.display = 'block';
         }
       }
       if (imgFalse) {
         if (optImgs[1]) {
           imgFalse.src = optImgs[1];
           imgFalse.style.display = 'block';
+          if (shapeFalse) shapeFalse.style.display = 'none';
         } else {
           imgFalse.src = '';
           imgFalse.style.display = 'none';
+          if (shapeFalse) shapeFalse.style.display = 'block';
         }
       }
     } else if (currentQuestionType === 'short-answer') {
