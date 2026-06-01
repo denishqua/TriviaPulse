@@ -89,20 +89,35 @@ app.get('/api/quizzes', (req, res) => {
     fs.mkdirSync(quizzesDir);
   }
 
-  fs.readdir(quizzesDir, (err, files) => {
+  fs.readdir(quizzesDir, { withFileTypes: true }, (err, dirents) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to read quizzes directory' });
     }
     
-    const quizFiles = files
-      .filter(file => file.endsWith('.csv') || file.endsWith('.json'))
-      .map(file => {
-        const ext = path.extname(file);
-        return {
-          id: file,
-          name: path.basename(file, ext).replace(/_/g, ' ').toUpperCase()
-        };
-      });
+    const quizFiles = [];
+    
+    for (const dirent of dirents) {
+      if (dirent.isDirectory()) {
+        const subfolder = dirent.name;
+        const subfolderPath = path.join(quizzesDir, subfolder);
+        
+        try {
+          const subFiles = fs.readdirSync(subfolderPath);
+          const quizFile = subFiles.find(f => f.endsWith('.csv') || f.endsWith('.json'));
+          
+          if (quizFile) {
+            const ext = path.extname(quizFile);
+            quizFiles.push({
+              // ID is the relative path (e.g. 'general_knowledge/general_knowledge.csv')
+              id: `${subfolder}/${quizFile}`,
+              name: subfolder.replace(/_/g, ' ').toUpperCase()
+            });
+          }
+        } catch (e) {
+          console.error(`Error reading quiz package directory ${subfolder}:`, e);
+        }
+      }
+    }
       
     const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
     res.json({ quizzes: quizFiles, localIp: resolvedIp, port: PORT });

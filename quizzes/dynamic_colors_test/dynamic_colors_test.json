@@ -3,7 +3,7 @@
     "type": "multiple-choice",
     "question": "Which of these is a primary cosmic constellation? (6 options layout test)",
     "timeLimit": 25,
-    "questionImage": "quizzes/dynamic_colors_test_images/nebula.svg",
+    "questionImage": "quizzes/dynamic_colors_test/nebula.svg",
     "options": [
       "Orion the Hunter",
       "Ursa Major",
@@ -13,11 +13,11 @@
       "Centaurus"
     ],
     "optionImages": [
-      "quizzes/dynamic_colors_test_images/earth.svg",
-      "quizzes/dynamic_colors_test_images/mars.svg",
-      "quizzes/dynamic_colors_test_images/jupiter.svg",
-      "quizzes/dynamic_colors_test_images/saturn.svg",
-      "quizzes/dynamic_colors_test_images/earth.svg",
+      "quizzes/dynamic_colors_test/earth.svg",
+      "quizzes/dynamic_colors_test/mars.svg",
+      "quizzes/dynamic_colors_test/jupiter.svg",
+      "quizzes/dynamic_colors_test/saturn.svg",
+      "quizzes/dynamic_colors_test/earth.svg",
       ""
     ],
     "correctAnswer": "Orion the Hunter"
@@ -26,7 +26,7 @@
     "type": "multiple-choice",
     "question": "Choose the number Nine in the 12-options layout test!",
     "timeLimit": 30,
-    "questionImage": "quizzes/dynamic_colors_test_images/shapes.svg",
+    "questionImage": "quizzes/dynamic_colors_test/shapes.svg",
     "options": [
       "One",
       "Two",
