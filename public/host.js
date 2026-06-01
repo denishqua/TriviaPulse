@@ -580,41 +580,46 @@ socket.on('state-changed', (data) => {
       optCount = 2;
     }
 
-    let wrapperWidth = '120px';
+    let wrapperWidth = '130px';
     let imgSize = '76px';
     let countFontSize = '1.2rem';
     let labelFontSize = '0.85rem';
     let countTop = '-30px';
-    let gap = '20px';
+    let gap = '24px';
     let chartContainerPadding = '0 40px';
+    let justification = 'space-around';
 
     if (optCount > 12) {
-      wrapperWidth = `${Math.floor((1000 - 30) / optCount) - 6}px`; // around 42px for 20 options
-      imgSize = '36px'; // smaller images for XL layouts to prevent overflow
-      countFontSize = '0.8rem';
-      labelFontSize = '0.65rem';
-      countTop = '-22px';
-      gap = '4px';
-      chartContainerPadding = '0 15px'; // Less padding inside the chart container
+      // Scale baseline to widescreen 1600px limits to utilize maximum screen space
+      wrapperWidth = `${Math.floor((1550 - 30) / optCount) - 6}px`; // ~70px width per column for 20 options
+      imgSize = '42px'; // larger image dimension since columns are wider
+      countFontSize = '0.9rem';
+      labelFontSize = '0.7rem';
+      countTop = '-24px';
+      gap = '6px';
+      chartContainerPadding = '0 15px';
+      justification = 'space-evenly'; // Distribute columns dynamically across widescreen
     } else if (optCount > 8) {
-      wrapperWidth = '70px';
-      imgSize = '50px';
-      countFontSize = '0.95rem';
-      labelFontSize = '0.75rem';
-      countTop = '-26px';
-      gap = '10px';
-      chartContainerPadding = '0 25px';
-    } else if (optCount > 4) {
       wrapperWidth = '95px';
-      imgSize = '64px';
-      countFontSize = '1.1rem';
+      imgSize = '60px';
+      countFontSize = '1.05rem';
       labelFontSize = '0.8rem';
       countTop = '-28px';
-      gap = '16px';
+      gap = '14px';
+      chartContainerPadding = '0 25px';
+      justification = 'space-evenly';
+    } else if (optCount > 4) {
+      wrapperWidth = '120px';
+      imgSize = '70px';
+      countFontSize = '1.15rem';
+      labelFontSize = '0.85rem';
+      countTop = '-30px';
+      gap = '20px';
+      justification = 'space-around';
     }
 
     resultsChart.style.gap = gap;
-    resultsChart.style.justifyContent = 'center';
+    resultsChart.style.justifyContent = justification;
     resultsChart.style.padding = chartContainerPadding;
 
     if (currentQuestion.type === 'short-answer') {
