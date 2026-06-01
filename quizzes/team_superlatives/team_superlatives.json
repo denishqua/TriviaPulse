@@ -3,6 +3,7 @@
     "type": "survey",
     "question": "The smart one",
     "timeLimit": 45,
+    "maxVotes": 3,
     "questionImage": "quizzes/dynamic_colors_test/nebula.svg",
     "options": [
       "Alan",
@@ -37,6 +38,7 @@
     "type": "survey",
     "question": "The lazy one",
     "timeLimit": 45,
+    "maxVotes": 3,
     "questionImage": "quizzes/dynamic_colors_test/nebula.svg",
     "options": [
       "Alan",

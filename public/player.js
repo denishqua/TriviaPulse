@@ -382,8 +382,6 @@ socket.on('state-changed', (data) => {
           });
         }
       }
-    }
-      
     } else if (currentQuestionType === 'true-false') {
       showPanel(panelControllerTf);
       
