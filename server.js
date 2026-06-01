@@ -853,6 +853,87 @@ function savePodiumResults(game) {
     });
     content += `====================================================\n`;
 
+    // Compile and append survey insights if there are survey questions
+    let surveyContent = '';
+    let hasSurveys = false;
+    
+    game.questions.forEach((q, qIdx) => {
+      if (q.type === 'survey') {
+        if (!hasSurveys) {
+          surveyContent += `\n====================================================\n`;
+          surveyContent += ` SURVEY INSIGHTS (RESULTS)\n`;
+          surveyContent += `====================================================\n`;
+          hasSurveys = true;
+        }
+        
+        surveyContent += `\nQuestion: "${q.question}"\n`;
+        surveyContent += `----------------------------------------------------\n`;
+        
+        const counts = new Array(q.options.length).fill(0);
+        for (const player of game.players.values()) {
+          const playerAns = player.answers[qIdx];
+          if (playerAns && playerAns.answer !== undefined && playerAns.answer !== null) {
+            const choice = playerAns.answer.toString().trim().toLowerCase();
+            const choices = choice.split(',');
+            choices.forEach(ch => {
+              const trimmed = ch.trim();
+              let selectedIndex = -1;
+              const numericIndex = parseInt(trimmed, 10);
+              if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < q.options.length) {
+                selectedIndex = numericIndex;
+              } else {
+                const charCode = trimmed.charCodeAt(0) - 97;
+                if (trimmed.length === 1 && charCode >= 0 && charCode < q.options.length) {
+                  selectedIndex = charCode;
+                } else {
+                  selectedIndex = q.options.findIndex(opt => opt.trim().toLowerCase() === trimmed);
+                }
+              }
+              if (selectedIndex >= 0 && selectedIndex < counts.length) {
+                counts[selectedIndex]++;
+              }
+            });
+          }
+        }
+        
+        const compiledOptions = q.options.map((optText, optIdx) => ({
+          text: optText,
+          count: counts[optIdx]
+        }));
+        
+        const nonZeroOptions = compiledOptions.filter(opt => opt.count > 0);
+        const countsMap = new Map();
+        nonZeroOptions.forEach(opt => {
+          if (!countsMap.has(opt.count)) {
+            countsMap.set(opt.count, []);
+          }
+          countsMap.get(opt.count).push(opt);
+        });
+        
+        const sortedCounts = Array.from(countsMap.keys()).sort((a, b) => b - a);
+        
+        const topCounts = sortedCounts.slice(0, 3);
+        const medals = ['🥇', '🥈', '🥉'];
+        
+        let hasVotes = false;
+        topCounts.forEach((cnt, idx) => {
+          const place = idx + 1;
+          const medal = medals[idx] || `${place}.`;
+          const opts = countsMap.get(cnt);
+          opts.forEach(opt => {
+            surveyContent += `${medal} Rank ${place}: ${opt.text} - ${opt.count} ${opt.count === 1 ? 'vote' : 'votes'}\n`;
+            hasVotes = true;
+          });
+        });
+        
+        if (!hasVotes) {
+          surveyContent += `(No votes were cast for this survey question)\n`;
+        }
+      }
+    });
+    
+    content += surveyContent;
+
     fs.writeFileSync(filepath, content, 'utf-8');
     console.log(`Podium results saved successfully to ${filepath}`);
 
@@ -919,13 +1000,39 @@ function showFinalPodium(game) {
         image: (q.optionImages && q.optionImages[optIdx]) || ''
       }));
 
-      // Sort by count descending
-      compiledOptions.sort((a, b) => b.count - a.count);
+      // Group options by their positive vote counts
+      const nonZeroOptions = compiledOptions.filter(opt => opt.count > 0);
+      const countsMap = new Map();
+      nonZeroOptions.forEach(opt => {
+        if (!countsMap.has(opt.count)) {
+          countsMap.set(opt.count, []);
+        }
+        countsMap.get(opt.count).push(opt);
+      });
+
+      // Sort unique counts descending
+      const sortedCounts = Array.from(countsMap.keys()).sort((a, b) => b - a);
+
+      // Take top 3 count groups
+      const finalChoices = [];
+      const topCounts = sortedCounts.slice(0, 3);
+      topCounts.forEach((cnt, idx) => {
+        const place = idx + 1;
+        const opts = countsMap.get(cnt);
+        opts.forEach(opt => {
+          finalChoices.push({
+            text: opt.text,
+            count: opt.count,
+            image: opt.image,
+            rank: place
+          });
+        });
+      });
 
       surveySummaries.push({
         question: q.question,
         questionImage: q.questionimage || '',
-        topChoices: compiledOptions.slice(0, 3) // Top 3 choices
+        topChoices: finalChoices
       });
     }
   });
