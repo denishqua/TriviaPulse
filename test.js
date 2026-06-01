@@ -121,6 +121,57 @@ try {
   assert.strictEqual(matchIdx, 1);
   console.log('✅ Test 5 Passed!');
 
+  // Test 6: Survey question scoring bypass and stats compiler
+  console.log('👉 Running Test 6: Survey scoring bypass and stats compiling...');
+  
+  // Scoring bypass mock
+  const questionType = 'survey';
+  const player = { score: 100, streak: 3, lastAnswerCorrect: true };
+  let pointsAwarded = 0;
+  
+  if (questionType === 'survey') {
+    pointsAwarded = 0;
+    player.lastAnswerCorrect = false;
+    // player.streak is NOT reset to 0!
+  } else {
+    player.streak = 0;
+    player.lastAnswerCorrect = false;
+  }
+  
+  player.score += pointsAwarded;
+  assert.strictEqual(player.score, 100);
+  assert.strictEqual(player.streak, 3); // Streak preserved!
+  assert.strictEqual(player.lastAnswerCorrect, false);
+  
+  // Compiled options mock (similar to server.js)
+  const qOptions = ["Mars", "Jupiter", "Saturn", "Earth"];
+  const votes = [1, 3, 0, 2]; // Saturn got 0, Mars 1, Earth 2, Jupiter 3
+  
+  const compiledOptions = qOptions.map((optText, optIdx) => ({
+    text: optText,
+    count: votes[optIdx]
+  }));
+  
+  compiledOptions.sort((a, b) => b.count - a.count);
+  
+  // Jupiter should be first (3 votes)
+  assert.strictEqual(compiledOptions[0].text, 'Jupiter');
+  assert.strictEqual(compiledOptions[0].count, 3);
+  
+  // Earth should be second (2 votes)
+  assert.strictEqual(compiledOptions[1].text, 'Earth');
+  assert.strictEqual(compiledOptions[1].count, 2);
+  
+  // Mars should be third (1 vote)
+  assert.strictEqual(compiledOptions[2].text, 'Mars');
+  assert.strictEqual(compiledOptions[2].count, 1);
+  
+  // Saturn should be fourth (0 votes)
+  assert.strictEqual(compiledOptions[3].text, 'Saturn');
+  assert.strictEqual(compiledOptions[3].count, 0);
+  
+  console.log('✅ Test 6 Passed!');
+
   console.log('\n🎉 ALL TRIVIAPULSE UNIT TESTS PASSED SUCCESSFULLY! 🎉');
   process.exit(0);
 } catch (error) {

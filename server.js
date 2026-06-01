@@ -391,9 +391,55 @@ io.on('connection', (socket) => {
         // Save podium results persistently
         savePodiumResults(game);
 
+        // Gather all survey questions and compile their top 3 answers
+        const surveySummaries = [];
+        game.questions.forEach((q, qIdx) => {
+          if (q.type === 'survey') {
+            const counts = new Array(q.options.length).fill(0);
+            for (const player of game.players.values()) {
+              const playerAns = player.answers[qIdx];
+              if (playerAns) {
+                const choice = playerAns.answer.toString().trim().toLowerCase();
+                let selectedIndex = -1;
+                const numericIndex = parseInt(choice, 10);
+                if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < q.options.length) {
+                  selectedIndex = numericIndex;
+                } else {
+                  const charCode = choice.charCodeAt(0) - 97;
+                  if (choice.length === 1 && charCode >= 0 && charCode < q.options.length) {
+                    selectedIndex = charCode;
+                  } else {
+                    selectedIndex = q.options.findIndex(opt => opt.trim().toLowerCase() === choice);
+                  }
+                }
+                if (selectedIndex >= 0 && selectedIndex < counts.length) {
+                  counts[selectedIndex]++;
+                }
+              }
+            }
+
+            // Create list of options with their final count
+            const compiledOptions = q.options.map((optText, optIdx) => ({
+              text: optText,
+              count: counts[optIdx],
+              image: (q.optionImages && q.optionImages[optIdx]) || ''
+            }));
+
+            // Sort by count descending
+            compiledOptions.sort((a, b) => b.count - a.count);
+
+            surveySummaries.push({
+              question: q.question,
+              questionImage: q.questionimage || '',
+              topChoices: compiledOptions.slice(0, 3) // Top 3 choices
+            });
+          }
+        });
+
         io.to(`game_${game.pin}`).emit('state-changed', {
           gameState: 'PODIUM',
-          podium
+          podium,
+          surveys: surveySummaries
         });
       }
     }
@@ -479,7 +525,9 @@ io.on('connection', (socket) => {
     const cleanAnswer = (answer !== undefined && answer !== null) ? answer.toString().trim().toLowerCase() : '';
     const cleanCorrect = (question.correctanswer !== undefined && question.correctanswer !== null) ? question.correctanswer.toString().trim().toLowerCase() : '';
 
-    if (question.type === 'short-answer') {
+    if (question.type === 'survey') {
+      isCorrect = false;
+    } else if (question.type === 'short-answer') {
       isCorrect = cleanAnswer === cleanCorrect;
     } else {
       let selectedText = '';
@@ -506,7 +554,10 @@ io.on('connection', (socket) => {
 
     // Scoring engine (Accuracy + Speed)
     let pointsAwarded = 0;
-    if (isCorrect) {
+    if (question.type === 'survey') {
+      pointsAwarded = 0;
+      player.lastAnswerCorrect = false;
+    } else if (isCorrect) {
       const ratio = Math.min(1, timeTaken / question.timeLimit);
       // TriviaPulse Formula: max 1000, drops down to 500 at max time
       pointsAwarded = Math.max(500, Math.round(1000 * (1 - ratio * 0.5)));
@@ -541,7 +592,8 @@ io.on('connection', (socket) => {
     socket.emit('answer-accepted', {
       correct: isCorrect,
       score: player.score,
-      streak: player.streak
+      streak: player.streak,
+      isSurvey: question.type === 'survey'
     });
 
     // If everyone answered, end question immediately
@@ -671,9 +723,9 @@ function endQuestion(game) {
   game.gameState = 'RESULTS';
   const question = game.questions[game.currentQuestionIndex];
 
-  // Calculate statistics for multiple choice and true-false dynamically
+  // Calculate statistics dynamically
   let stats;
-  if (question.type === 'multiple-choice' || question.type === 'true-false') {
+  if (question.type === 'multiple-choice' || question.type === 'true-false' || question.type === 'survey') {
     stats = new Array(question.options.length).fill(0);
   } else {
     stats = { shortAnswerMatches: 0, shortAnswerWrong: 0 };
@@ -682,7 +734,7 @@ function endQuestion(game) {
   for (const player of game.players.values()) {
     const playerAnswer = player.answers[game.currentQuestionIndex];
     if (playerAnswer) {
-      if (question.type === 'multiple-choice' || question.type === 'true-false') {
+      if (question.type === 'multiple-choice' || question.type === 'true-false' || question.type === 'survey') {
         const choice = playerAnswer.answer.toString().trim().toLowerCase();
         let selectedIndex = -1;
         
@@ -727,7 +779,8 @@ function endQuestion(game) {
       totalScore: player.score,
       streak: player.streak,
       rank: playerRank,
-      wasAnswered: !!playerAns
+      wasAnswered: !!playerAns,
+      isSurvey: question.type === 'survey'
     });
   }
 

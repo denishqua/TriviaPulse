@@ -495,6 +495,16 @@ socket.on('state-changed', (data) => {
   } else if (state === 'RESULTS') {
     resultsQTitle.textContent = currentQuestion.question;
     resultsCorrectText.textContent = data.correctAnswer;
+
+    // Hide correct answer section if question is a survey
+    const correctAnsContainer = document.querySelector('.results-correct-answer');
+    if (correctAnsContainer) {
+      if (currentQuestion.type === 'survey') {
+        correctAnsContainer.style.display = 'none';
+      } else {
+        correctAnsContainer.style.display = 'block';
+      }
+    }
     
     // Render chart bars based on stats dynamically
     const stats = data.stats;
@@ -720,6 +730,89 @@ socket.on('state-changed', (data) => {
         barWrapper.appendChild(labelDiv);
         resultsChart.appendChild(barWrapper);
       });
+    } else if (currentQuestion.type === 'survey') {
+      resultsChart.style.display = 'flex';
+      
+      const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
+      const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
+
+      const mappedOptions = currentQuestion.options.map((optText, idx) => {
+        return {
+          text: optText,
+          color: colors[idx % colors.length],
+          shape: shapes[idx % shapes.length],
+          count: stats[idx] || 0,
+          img: (currentQuestion.optionImages && currentQuestion.optionImages[idx]) || ''
+        };
+      });
+
+      // Sort by count descending (highest votes first)
+      mappedOptions.sort((a, b) => b.count - a.count);
+
+      mappedOptions.forEach(opt => {
+        const barWrapper = document.createElement('div');
+        barWrapper.className = 'chart-bar-wrapper';
+        
+        const bar = document.createElement('div');
+        bar.className = `chart-bar ${opt.color}`;
+        bar.style.setProperty('--final-height', getPercent(opt.count));
+        bar.style.height = '0%';
+        
+        const countLabel = document.createElement('span');
+        countLabel.className = 'count-label';
+        countLabel.textContent = `${opt.count} (${getPercent(opt.count)})`;
+        bar.appendChild(countLabel);
+        
+        barWrapper.appendChild(bar);
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'chart-label';
+        labelDiv.style.display = 'flex';
+        labelDiv.style.flexDirection = 'column';
+        labelDiv.style.alignItems = 'center';
+        labelDiv.style.gap = '8px';
+        labelDiv.style.marginTop = '10px';
+        
+        if (opt.img) {
+          const img = document.createElement('img');
+          img.src = opt.img;
+          img.style.width = '76px';
+          img.style.height = '76px';
+          img.style.objectFit = 'contain';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
+          img.style.padding = '2px';
+          labelDiv.appendChild(img);
+        } else {
+          const shapeIcon = document.createElement('div');
+          if (opt.shape === 'tri') {
+            shapeIcon.className = 'shape-tri';
+            shapeIcon.style.borderBottomWidth = '20px';
+            shapeIcon.style.borderLeftWidth = '12px';
+            shapeIcon.style.borderRightWidth = '12px';
+          } else {
+            shapeIcon.className = `shape-${opt.shape}`;
+            shapeIcon.style.width = '18px';
+            shapeIcon.style.height = '18px';
+          }
+          labelDiv.appendChild(shapeIcon);
+        }
+        
+        const textSpan = document.createElement('span');
+        textSpan.style.fontSize = '0.85rem';
+        textSpan.style.fontWeight = '700';
+        textSpan.style.maxWidth = '130px';
+        textSpan.style.overflow = 'hidden';
+        textSpan.style.textOverflow = 'ellipsis';
+        textSpan.style.whiteSpace = 'nowrap';
+        textSpan.style.color = 'var(--text-secondary)';
+        textSpan.textContent = opt.text;
+        labelDiv.appendChild(textSpan);
+        
+        barWrapper.appendChild(labelDiv);
+        resultsChart.appendChild(barWrapper);
+      });
     }
 
     showSection(stateResults);
@@ -780,6 +873,74 @@ socket.on('state-changed', (data) => {
     setTimeout(() => showPodiumMember('3rd', third), 500);
     setTimeout(() => showPodiumMember('2nd', second), 1500);
     setTimeout(() => showPodiumMember('1st', first), 2500);
+
+    // Compile and show Survey Insights review panel if survey data is present
+    const surveyPanel = document.getElementById('survey-insights-panel');
+    const surveyList = document.getElementById('survey-insights-list');
+    
+    if (surveyPanel && surveyList) {
+      if (data.surveys && data.surveys.length > 0) {
+        surveyList.innerHTML = '';
+        data.surveys.forEach(survey => {
+          const card = document.createElement('div');
+          card.className = 'glass-panel';
+          card.style.marginBottom = '25px';
+          card.style.padding = '25px';
+          card.style.borderRadius = '16px';
+          card.style.background = 'rgba(255, 255, 255, 0.02)';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.gap = '15px';
+          card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+          let imgHtml = '';
+          if (survey.questionImage) {
+            imgHtml = `
+              <div style="flex: 1 1 200px; max-width: 300px; aspect-ratio: 16/9; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; height: 150px;">
+                <img src="${survey.questionImage}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" />
+              </div>
+            `;
+          }
+
+          let choicesHtml = '';
+          survey.topChoices.forEach((choice, choiceIdx) => {
+            const badge = ['🥇', '🥈', '🥉'][choiceIdx] || `${choiceIdx + 1}.`;
+            let optImgHtml = '';
+            if (choice.image) {
+              optImgHtml = `<img src="${choice.image}" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); padding: 2px;" />`;
+            }
+
+            choicesHtml += `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 1.4rem; line-height: 1;">${badge}</span>
+                  ${optImgHtml}
+                  <span style="font-weight: 600; color: var(--text-secondary); font-size: 1rem;">${escapeHtml(choice.text)}</span>
+                </div>
+                <span style="font-weight: 800; color: var(--purple-neon); font-size: 1.1rem;">${choice.count} ${choice.count === 1 ? 'vote' : 'votes'}</span>
+              </div>
+            `;
+          });
+
+          card.innerHTML = `
+            <div style="display: flex; gap: 25px; align-items: center; flex-wrap: wrap;">
+              ${imgHtml}
+              <div style="flex: 2 1 300px; display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.3;">${escapeHtml(survey.question)}</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  ${choicesHtml}
+                </div>
+              </div>
+            </div>
+          `;
+          
+          surveyList.appendChild(card);
+        });
+        surveyPanel.style.display = 'block';
+      } else {
+        surveyPanel.style.display = 'none';
+      }
+    }
 
     showSection(statePodium);
   }

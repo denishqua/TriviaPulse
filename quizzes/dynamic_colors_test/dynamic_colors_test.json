@@ -56,5 +56,18 @@
     "timeLimit": 20,
     "questionImage": "quizzes/dynamic_colors_test/saturn.svg",
     "correctAnswer": "Paris"
+  },
+  {
+    "type": "survey",
+    "question": "Which solar system planet has the most captivating visual features? (Survey)",
+    "timeLimit": 20,
+    "questionImage": "quizzes/dynamic_colors_test/jupiter.svg",
+    "options": ["Mars", "Jupiter", "Saturn", "Earth"],
+    "optionImages": [
+      "quizzes/dynamic_colors_test/mars.svg",
+      "quizzes/dynamic_colors_test/jupiter.svg",
+      "quizzes/dynamic_colors_test/saturn.svg",
+      "quizzes/dynamic_colors_test/earth.svg"
+    ]
   }
 ]

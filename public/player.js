@@ -164,7 +164,7 @@ socket.on('state-changed', (data) => {
   } else if (state === 'QUESTION') {
     currentQuestionType = data.question.type;
 
-    if (currentQuestionType === 'multiple-choice') {
+    if (currentQuestionType === 'multiple-choice' || currentQuestionType === 'survey') {
       showPanel(panelControllerMc);
       
       const gridContainer = panelControllerMc.querySelector('.player-grid-buttons');
@@ -289,7 +289,35 @@ socket.on('question-over', (data) => {
     panel.style.display = 'none';
   });
 
-  if (data.correct) {
+  // Reset feedback-correct default styles
+  feedbackCorrect.style.background = '';
+  feedbackCorrect.style.border = '';
+  const titleEl = feedbackCorrect.querySelector('.feedback-title');
+  if (titleEl) {
+    titleEl.textContent = 'CORRECT! 🎉';
+    titleEl.style.color = '';
+  }
+  lblFeedbackPointsGained.style.color = '';
+  lblFeedbackRankC.style.color = '';
+
+  if (data.isSurvey) {
+    feedbackCorrect.style.display = 'flex';
+    feedbackCorrect.style.background = 'linear-gradient(135deg, #3b0764 0%, #060417 100%)';
+    feedbackCorrect.style.border = '5px solid var(--purple-neon)';
+    
+    if (titleEl) {
+      titleEl.textContent = 'RESPONSE RECORDED! 🗳️';
+      titleEl.style.color = 'var(--purple-neon)';
+    }
+    
+    lblFeedbackPointsGained.textContent = 'Thank you for sharing your opinion!';
+    lblFeedbackPointsGained.style.color = 'var(--text-secondary)';
+    
+    lblFeedbackStreak.style.display = 'none';
+    
+    lblFeedbackRankC.textContent = 'Standings are updated on the host screen.';
+    lblFeedbackRankC.style.color = 'var(--text-muted)';
+  } else if (data.correct) {
     feedbackCorrect.style.display = 'flex';
     lblFeedbackPointsGained.textContent = `+${data.pointsGained} points`;
     
