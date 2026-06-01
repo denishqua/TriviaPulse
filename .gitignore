@@ -4,3 +4,6 @@ node_modules/
 tmp/
 results/*
 !results/sample_results.txt
+quizzes/*
+!quizzes/dynamic_colors_test
+!quizzes/general_knowledge

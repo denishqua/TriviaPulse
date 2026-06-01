@@ -391,7 +391,21 @@ io.on('connection', (socket) => {
       } else {
         // Game Over! Podium
         game.gameState = 'PODIUM';
-        const podium = getLeaderboard(game).slice(0, 3);
+        // Build podium — include all players tied at each rank position
+        const fullLeaderboard = getLeaderboard(game);
+        const podium = [];
+        let rank = 1;
+        let i = 0;
+        while (i < fullLeaderboard.length && rank <= 3) {
+          const currentScore = fullLeaderboard[i].score;
+          const tied = [];
+          while (i < fullLeaderboard.length && fullLeaderboard[i].score === currentScore) {
+            tied.push(fullLeaderboard[i]);
+            i++;
+          }
+          podium.push({ rank, players: tied, score: currentScore });
+          rank += tied.length;
+        }
         
         // Save podium results persistently
         savePodiumResults(game);
@@ -403,7 +417,7 @@ io.on('connection', (socket) => {
             const counts = new Array(q.options.length).fill(0);
             for (const player of game.players.values()) {
               const playerAns = player.answers[qIdx];
-              if (playerAns) {
+              if (playerAns && playerAns.answer !== undefined && playerAns.answer !== null) {
                 const choice = playerAns.answer.toString().trim().toLowerCase();
                 let selectedIndex = -1;
                 const numericIndex = parseInt(choice, 10);
@@ -738,7 +752,7 @@ function endQuestion(game) {
   
   for (const player of game.players.values()) {
     const playerAnswer = player.answers[game.currentQuestionIndex];
-    if (playerAnswer) {
+    if (playerAnswer && playerAnswer.answer !== undefined && playerAnswer.answer !== null) {
       if (question.type === 'multiple-choice' || question.type === 'true-false' || question.type === 'survey') {
         const choice = playerAnswer.answer.toString().trim().toLowerCase();
         let selectedIndex = -1;

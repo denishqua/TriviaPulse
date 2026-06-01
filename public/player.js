@@ -322,13 +322,25 @@ socket.on('question-over', (data) => {
     lblFeedbackPointsGained.textContent = `+${data.pointsGained} points`;
     
     if (data.streak >= 2) {
+      let streakEmoji = '🔥';
+      let streakLabel = `Streak ×${data.streak}`;
+      if (data.streak >= 10) { streakEmoji = '🌟'; streakLabel = `ON FIRE! ×${data.streak}`; }
+      else if (data.streak >= 5) { streakEmoji = '⚡'; streakLabel = `Unstoppable! ×${data.streak}`; }
+      else if (data.streak >= 3) { streakEmoji = '🔥'; streakLabel = `On a roll! ×${data.streak}`; }
+
+      lblFeedbackStreak.textContent = `${streakEmoji} ${streakLabel}`;
       lblFeedbackStreak.style.display = 'inline-block';
-      lblFeedbackStreak.textContent = `🔥 Streak: ${data.streak}`;
+      // Pop animation
+      lblFeedbackStreak.classList.remove('streak-pop');
+      void lblFeedbackStreak.offsetWidth;
+      lblFeedbackStreak.classList.add('streak-pop');
     } else {
       lblFeedbackStreak.style.display = 'none';
+      lblFeedbackStreak.classList.remove('streak-pop');
     }
     
     lblFeedbackRankC.textContent = `Current Rank: ${data.rank}`;
+
   } else {
     feedbackIncorrect.style.display = 'flex';
     if (!data.wasAnswered) {

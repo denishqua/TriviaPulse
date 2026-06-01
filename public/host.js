@@ -6,6 +6,7 @@ let currentQuestion = null;
 let quizName = '';
 let questionCount = 0;
 let timeRemainingInterval = null;
+let lastRankings = {}; // nickname -> rank from previous leaderboard
 
 // DOM Elements
 const stateSetup = document.getElementById('state-setup');
@@ -362,6 +363,20 @@ socket.on('state-changed', (data) => {
     if (questionImageContainer && questionImage) {
       if (currentQuestion.questionImage) {
         questionImage.src = currentQuestion.questionImage;
+
+        // Scale image width by option count — aspect-ratio:16/9 handles the height
+        const imgOptCount = (currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'survey')
+          ? currentQuestion.options.length
+          : (currentQuestion.type === 'true-false' ? 2 : 0);
+
+        let imgMaxWidth = '820px';
+        if (imgOptCount > 12)     { imgMaxWidth = '460px'; }
+        else if (imgOptCount > 8) { imgMaxWidth = '580px'; }
+        else if (imgOptCount > 4) { imgMaxWidth = '680px'; }
+        else if (imgOptCount <= 2) { imgMaxWidth = '640px'; }
+
+        questionImageContainer.style.height = '';   // let aspect-ratio drive height
+        questionImageContainer.style.maxWidth = imgMaxWidth;
         questionImageContainer.style.display = 'flex';
       } else {
         questionImage.src = '';
@@ -384,30 +399,30 @@ socket.on('state-changed', (data) => {
       questionAnswersGrid.style.display = 'grid';
       const optCount = currentQuestion.options.length;
       
-      let cardPadding = '30px 40px';
+      let cardPadding = '16px 35px';
       let cardGap = '25px';
       let cardFontSize = '1.6rem';
       let gridGap = '20px';
-      let shapeSize = '54px';
+      let shapeSize = '70px';
       
       if (optCount > 12) {
-        cardPadding = '8px 12px';
+        cardPadding = '5px 10px';
         cardGap = '8px';
         cardFontSize = '0.95rem';
         gridGap = '8px';
-        shapeSize = '30px';
+        shapeSize = '36px';
       } else if (optCount > 8) {
-        cardPadding = '14px 18px';
+        cardPadding = '7px 16px';
         cardGap = '12px';
         cardFontSize = '1.15rem';
         gridGap = '10px';
-        shapeSize = '40px';
+        shapeSize = '54px';
       } else if (optCount > 4) {
-        cardPadding = '20px 25px';
+        cardPadding = '12px 22px';
         cardGap = '16px';
         cardFontSize = '1.35rem';
         gridGap = '15px';
-        shapeSize = '48px';
+        shapeSize = '62px';
       }
       
       questionAnswersGrid.style.gap = gridGap;
@@ -933,11 +948,26 @@ socket.on('state-changed', (data) => {
     // Populate leaderboard top 5 list
     leaderboardList.innerHTML = '';
     const topFive = data.leaderboard.slice(0, 5);
+    const newRankings = {};
     
     topFive.forEach((player, idx) => {
+      newRankings[player.nickname] = idx + 1;
       const row = document.createElement('div');
       row.className = `leaderboard-row ${idx < 3 ? 'top-three' : ''}`;
       
+      // Rank change badge
+      let rankChangeBadge = '';
+      if (lastRankings[player.nickname] !== undefined) {
+        const delta = lastRankings[player.nickname] - (idx + 1);
+        if (delta > 0) {
+          rankChangeBadge = `<span class="rank-change up">▲${delta}</span>`;
+        } else if (delta < 0) {
+          rankChangeBadge = `<span class="rank-change down">▼${Math.abs(delta)}</span>`;
+        } else {
+          rankChangeBadge = `<span class="rank-change same">—</span>`;
+        }
+      }
+
       let streakBadge = '';
       if (player.streak >= 2) {
         streakBadge = `<span class="streak-tag">🔥 STREAK x${player.streak}</span>`;
@@ -947,11 +977,25 @@ socket.on('state-changed', (data) => {
         <div class="left">
           <span class="rank">${idx + 1}</span>
           <span>${escapeHtml(player.nickname)} ${streakBadge}</span>
+          ${rankChangeBadge}
         </div>
         <div class="score">${player.score}</div>
       `;
+
+      // Stagger each row's entrance
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(-20px)';
+      setTimeout(() => {
+        row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        row.style.opacity = '1';
+        row.style.transform = 'translateX(0)';
+      }, idx * 120);
+
       leaderboardList.appendChild(row);
     });
+
+    // Save for next round comparison
+    lastRankings = newRankings;
 
     if (currentQuestion.index + 1 < questionCount) {
       btnLeaderboardNext.textContent = 'Next Question';
@@ -962,98 +1006,173 @@ socket.on('state-changed', (data) => {
     showSection(stateLeaderboard);
 
   } else if (state === 'PODIUM') {
-    const podium = data.podium;
-    
-    // Animate Podium values
-    const first = podium[0];
-    const second = podium[1];
-    const third = podium[2];
+    try {
+      const podium = data.podium || [];
 
-    const showPodiumMember = (idPrefix, playerData) => {
-      const col = document.getElementById(`podium-${idPrefix}`);
-      if (playerData) {
-        document.getElementById(`podium-${idPrefix}-name`).textContent = escapeHtml(playerData.nickname);
-        document.getElementById(`podium-${idPrefix}-score`).textContent = `${playerData.score} pts`;
-        col.style.opacity = '1';
-        col.className += ' animate-float';
-      } else {
-        col.style.opacity = '0';
-      }
-    };
+      // Clear and rebuild podium container dynamically
+      const podiumContainer = document.querySelector('.podium-container');
+      if (podiumContainer) {
+        podiumContainer.innerHTML = '';
 
-    // Sequential load to wow the host
-    setTimeout(() => showPodiumMember('3rd', third), 500);
-    setTimeout(() => showPodiumMember('2nd', second), 1500);
-    setTimeout(() => showPodiumMember('1st', first), 2500);
+        const rankMeta = {
+          1: { id: '1st', medalClass: 'gold',   nameSize: '1.5rem', numSize: '4rem', order: 2 },
+          2: { id: '2nd', medalClass: 'silver', nameSize: '1.3rem', numSize: '3rem', order: 1 },
+          3: { id: '3rd', medalClass: 'bronze', nameSize: '1.2rem', numSize: '2.5rem', order: 3 },
+        };
 
-    // Compile and show Survey Insights review panel if survey data is present
-    const surveyPanel = document.getElementById('survey-insights-panel');
-    const surveyList = document.getElementById('survey-insights-list');
-    
-    if (surveyPanel && surveyList) {
-      if (data.surveys && data.surveys.length > 0) {
-        surveyList.innerHTML = '';
-        data.surveys.forEach(survey => {
-          const card = document.createElement('div');
-          card.className = 'glass-panel';
-          card.style.marginBottom = '25px';
-          card.style.padding = '25px';
-          card.style.borderRadius = '16px';
-          card.style.background = 'rgba(255, 255, 255, 0.02)';
-          card.style.display = 'flex';
-          card.style.flexDirection = 'column';
-          card.style.gap = '15px';
-          card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        podium.forEach((slot, slotIdx) => {
+          const meta = rankMeta[slot.rank];
+          if (!meta) return;
 
-          let imgHtml = '';
-          if (survey.questionImage) {
-            imgHtml = `
-              <div style="flex: 1 1 200px; max-width: 300px; aspect-ratio: 16/9; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; height: 150px;">
-                <img src="${survey.questionImage}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" />
-              </div>
-            `;
+          const slotEl = document.createElement('div');
+          slotEl.className = 'podium-column';
+          slotEl.style.opacity = '0';
+          slotEl.style.transform = 'translateY(80px)';
+          slotEl.style.transition = 'none';
+          slotEl.style.order = meta.order; // Display columns in: 2nd (left), 1st (center), 3rd (right)
+
+          // Wider slot when multiple players share the rank
+          const isTied = slot.players && slot.players.length > 1;
+          if (isTied) slotEl.style.width = `${Math.min(slot.players.length * 160, 400)}px`;
+
+          // Names row
+          const namesWrapper = document.createElement('div');
+          namesWrapper.style.display = 'flex';
+          namesWrapper.style.flexDirection = 'column';
+          namesWrapper.style.alignItems = 'center';
+          namesWrapper.style.gap = '4px';
+          namesWrapper.style.marginBottom = '12px';
+          namesWrapper.style.width = '100%';
+
+          if (slot.players) {
+            slot.players.forEach(p => {
+              const nameEl = document.createElement('div');
+              nameEl.className = 'podium-player-name';
+              nameEl.style.fontSize = isTied ? '1.1rem' : meta.nameSize;
+              nameEl.style.marginBottom = '0';
+              nameEl.textContent = p.nickname; // Secure and avoids double-escaping issues
+              namesWrapper.appendChild(nameEl);
+            });
+          }
+          slotEl.appendChild(namesWrapper);
+
+          // Pedestal
+          const pedestal = document.createElement('div');
+          pedestal.className = `podium-pedestal ${meta.medalClass}`;
+
+          const rankNum = document.createElement('span');
+          rankNum.className = 'podium-rank-num';
+          rankNum.style.fontSize = meta.numSize;
+          rankNum.textContent = slot.rank;
+          pedestal.appendChild(rankNum);
+
+          // Tied badge
+          if (isTied) {
+            const tieBadge = document.createElement('span');
+            tieBadge.style.fontSize = '0.75rem';
+            tieBadge.style.fontWeight = '700';
+            tieBadge.style.color = 'rgba(255,255,255,0.6)';
+            tieBadge.style.letterSpacing = '1px';
+            tieBadge.style.textTransform = 'uppercase';
+            tieBadge.style.marginTop = '4px';
+            tieBadge.textContent = `TIE — ${slot.players.length} players`;
+            pedestal.appendChild(tieBadge);
           }
 
-          let choicesHtml = '';
-          survey.topChoices.forEach((choice, choiceIdx) => {
-            const badge = ['🥇', '🥈', '🥉'][choiceIdx] || `${choiceIdx + 1}.`;
-            let optImgHtml = '';
-            if (choice.image) {
-              optImgHtml = `<img src="${choice.image}" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); padding: 2px;" />`;
+          const scoreEl = document.createElement('span');
+          scoreEl.className = 'podium-score';
+          scoreEl.textContent = `${slot.score} pts`;
+          pedestal.appendChild(scoreEl);
+
+          slotEl.appendChild(pedestal);
+          podiumContainer.appendChild(slotEl);
+
+          // Animate in sequentially based on physical layout index
+          setTimeout(() => {
+            slotEl.style.transition = 'opacity 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            slotEl.style.opacity = '1';
+            slotEl.style.transform = 'translateY(0)';
+            setTimeout(() => slotEl.classList.add('animate-float'), 600);
+            if (slot.rank === 1) {
+              setTimeout(() => slotEl.classList.add('podium-champion-flash'), 300);
+            }
+          }, 500 + slotIdx * 800);
+        });
+      }
+
+      // Compile and show Survey Insights review panel if survey data is present
+      const surveyPanel = document.getElementById('survey-insights-panel');
+      const surveyList = document.getElementById('survey-insights-list');
+      
+      if (surveyPanel && surveyList) {
+        const surveys = data.surveys || [];
+        if (surveys.length > 0) {
+          surveyList.innerHTML = '';
+          surveys.forEach(survey => {
+            const card = document.createElement('div');
+            card.className = 'glass-panel';
+            card.style.marginBottom = '25px';
+            card.style.padding = '25px';
+            card.style.borderRadius = '16px';
+            card.style.background = 'rgba(255, 255, 255, 0.02)';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.gap = '15px';
+            card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+            let imgHtml = '';
+            if (survey.questionImage) {
+              imgHtml = `
+                <div style="flex: 1 1 200px; max-width: 300px; aspect-ratio: 16/9; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 8px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; height: 150px;">
+                  <img src="${survey.questionImage}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;" />
+                </div>
+              `;
             }
 
-            choicesHtml += `
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <span style="font-size: 1.4rem; line-height: 1;">${badge}</span>
-                  ${optImgHtml}
-                  <span style="font-weight: 600; color: var(--text-secondary); font-size: 1rem;">${escapeHtml(choice.text)}</span>
+            let choicesHtml = '';
+            if (survey.topChoices) {
+              survey.topChoices.filter(c => c.count > 0).forEach((choice, choiceIdx) => {
+                const badge = ['🥇', '🥈', '🥉'][choiceIdx] || `${choiceIdx + 1}.`;
+                let optImgHtml = '';
+                if (choice.image) {
+                  optImgHtml = `<img src="${choice.image}" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); padding: 2px;" />`;
+                }
+
+                choicesHtml += `
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span style="font-size: 1.4rem; line-height: 1;">${badge}</span>
+                      ${optImgHtml}
+                      <span style="font-weight: 600; color: var(--text-secondary); font-size: 1rem;">${escapeHtml(choice.text)}</span>
+                    </div>
+                    <span style="font-weight: 800; color: var(--purple-neon); font-size: 1.1rem;">${choice.count} ${choice.count === 1 ? 'vote' : 'votes'}</span>
+                  </div>
+                `;
+              });
+            }
+
+            card.innerHTML = `
+              <div style="display: flex; gap: 25px; align-items: center; flex-wrap: wrap;">
+                ${imgHtml}
+                <div style="flex: 2 1 300px; display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                  <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.3;">${escapeHtml(survey.question)}</h3>
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${choicesHtml}
+                  </div>
                 </div>
-                <span style="font-weight: 800; color: var(--purple-neon); font-size: 1.1rem;">${choice.count} ${choice.count === 1 ? 'vote' : 'votes'}</span>
               </div>
             `;
+            
+            surveyList.appendChild(card);
           });
-
-          card.innerHTML = `
-            <div style="display: flex; gap: 25px; align-items: center; flex-wrap: wrap;">
-              ${imgHtml}
-              <div style="flex: 2 1 300px; display: flex; flex-direction: column; gap: 15px; width: 100%;">
-                <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.3;">${escapeHtml(survey.question)}</h3>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  ${choicesHtml}
-                </div>
-              </div>
-            </div>
-          `;
-          
-          surveyList.appendChild(card);
-        });
-        surveyPanel.style.display = 'block';
-      } else {
-        surveyPanel.style.display = 'none';
+          surveyPanel.style.display = 'block';
+        } else {
+          surveyPanel.style.display = 'none';
+        }
       }
+    } catch (err) {
+      console.error('Error rendering podium:', err);
     }
-
     showSection(statePodium);
   }
 });
