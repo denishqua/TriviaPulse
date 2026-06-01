@@ -1,8 +1,8 @@
 Type,Question,TimeLimit,OptionA,OptionB,OptionC,OptionD,CorrectAnswer,QuestionImage,OptionAImage,OptionBImage,OptionCImage,OptionDImage
-multiple-choice,"Which planet is known as the Red Planet?",20,"Earth","Mars","Jupiter","Saturn","Mars","images/mars.svg","images/earth.svg","images/mars.svg","images/jupiter.svg","images/saturn.svg"
+multiple-choice,"Which planet is known as the Red Planet?",20,"Earth","Mars","Jupiter","Saturn","Mars","quizzes/general_knowledge_images/mars.svg","quizzes/general_knowledge_images/earth.svg","quizzes/general_knowledge_images/mars.svg","quizzes/general_knowledge_images/jupiter.svg","quizzes/general_knowledge_images/saturn.svg"
 true-false,"The Great Wall of China is visible from space.",15,"True","False",,,"False",,,,,
 short-answer,"What is the capital city of France?",20,,,,,"Paris",,,,,
-multiple-choice,"Who painted the Mona Lisa?",20,"Vincent van Gogh","Pablo Picasso","Leonardo da Vinci","Michelangelo","Leonardo da Vinci","images/shapes.svg",,,,
+multiple-choice,"Who painted the Mona Lisa?",20,"Vincent van Gogh","Pablo Picasso","Leonardo da Vinci","Michelangelo","Leonardo da Vinci","quizzes/general_knowledge_images/shapes.svg",,,,
 multiple-choice,"What is the powerhouse of the cell?",15,"Ribosome","Mitochondria","Nucleus","Chloroplast","Mitochondria",,,,,
 true-false,"Water boils at 100 degrees Celsius at sea level.",10,"True","False",,,"True",,,,,
 short-answer,"How many continents are there on Earth?",15,,,,,"7",,,,,

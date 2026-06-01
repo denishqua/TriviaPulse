@@ -24,6 +24,8 @@ let tunnelProcess = null;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the 'quizzes' directory to allow quiz-encapsulated assets
+app.use('/quizzes', express.static(path.join(__dirname, 'quizzes')));
 app.use(express.json());
 
 // In-memory game sessions
