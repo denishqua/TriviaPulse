@@ -16,6 +16,7 @@ const io = new Server(server, {
 
 const isLan = process.argv.includes('--lan');
 const isTunnel = process.argv.includes('--tunnel');
+const showSamples = process.argv.includes('--samples') || process.argv.includes('--debug');
 const PORT = 3000; // Enforced for Pinggy forwarding
 const HOST = isTunnel ? '127.0.0.1' : (isLan ? '0.0.0.0' : '127.0.0.1');
 
@@ -128,9 +129,8 @@ app.get('/api/quizzes', (req, res) => {
     fs.mkdirSync(sampleQuizzesDir);
   }
 
-  const sampleQuizzes = scanQuizzesDir('sample_quizzes');
   const userQuizzes = scanQuizzesDir('quizzes');
-  const combinedQuizzes = [...sampleQuizzes, ...userQuizzes];
+  const combinedQuizzes = showSamples ? [...scanQuizzesDir('sample_quizzes'), ...userQuizzes] : userQuizzes;
       
   const resolvedIp = isTunnel ? (publicTunnelUrl || 'Generating tunnel...') : (isLan ? getLocalIpAddress() : 'localhost');
   res.json({ quizzes: combinedQuizzes, localIp: resolvedIp, port: PORT });
