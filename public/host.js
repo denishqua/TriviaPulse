@@ -383,6 +383,34 @@ socket.on('state-changed', (data) => {
     if (currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'survey') {
       questionAnswersGrid.style.display = 'grid';
       const optCount = currentQuestion.options.length;
+      
+      let cardPadding = '30px 40px';
+      let cardGap = '25px';
+      let cardFontSize = '1.6rem';
+      let gridGap = '20px';
+      let shapeSize = '54px';
+      
+      if (optCount > 12) {
+        cardPadding = '8px 12px';
+        cardGap = '8px';
+        cardFontSize = '0.95rem';
+        gridGap = '8px';
+        shapeSize = '30px';
+      } else if (optCount > 8) {
+        cardPadding = '14px 18px';
+        cardGap = '12px';
+        cardFontSize = '1.15rem';
+        gridGap = '10px';
+        shapeSize = '40px';
+      } else if (optCount > 4) {
+        cardPadding = '20px 25px';
+        cardGap = '16px';
+        cardFontSize = '1.35rem';
+        gridGap = '15px';
+        shapeSize = '48px';
+      }
+      
+      questionAnswersGrid.style.gap = gridGap;
       if (optCount <= 4) {
         questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
       } else if (optCount <= 9) {
@@ -403,28 +431,50 @@ socket.on('state-changed', (data) => {
         card.className = `answer-card ${color}`;
         card.style.display = 'flex';
         card.style.alignItems = 'center';
+        card.style.padding = cardPadding;
+        card.style.gap = cardGap;
+        card.style.fontSize = cardFontSize;
+        card.style.borderRadius = optCount > 12 ? '10px' : (optCount > 8 ? '14px' : '20px');
         
         const shapeWrapper = document.createElement('div');
         shapeWrapper.className = 'answer-shape';
+        shapeWrapper.style.width = shapeSize;
+        shapeWrapper.style.height = shapeSize;
         
         if (optImg) {
-          shapeWrapper.style.width = '54px';
-          shapeWrapper.style.height = '54px';
-          
           const img = document.createElement('img');
           img.className = 'answer-opt-image';
           img.src = optImg;
-          img.style.width = '54px';
-          img.style.height = '54px';
+          img.style.width = shapeSize;
+          img.style.height = shapeSize;
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '8px';
+          img.style.borderRadius = optCount > 12 ? '4px' : '8px';
           img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
-          img.style.padding = '2px';
+          img.style.padding = optCount > 12 ? '1px' : '2px';
           shapeWrapper.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');
           shapeIcon.className = `shape-${shape}`;
+          if (optCount > 12) {
+            if (shape === 'tri') {
+              shapeIcon.style.borderBottomWidth = '12px';
+              shapeIcon.style.borderLeftWidth = '7px';
+              shapeIcon.style.borderRightWidth = '7px';
+            } else {
+              shapeIcon.style.width = '12px';
+              shapeIcon.style.height = '12px';
+            }
+          } else if (optCount > 8) {
+            if (shape === 'tri') {
+              shapeIcon.style.borderBottomWidth = '16px';
+              shapeIcon.style.borderLeftWidth = '9px';
+              shapeIcon.style.borderRightWidth = '9px';
+            } else {
+              shapeIcon.style.width = '15px';
+              shapeIcon.style.height = '15px';
+            }
+          }
           shapeWrapper.appendChild(shapeIcon);
         }
         
@@ -437,7 +487,6 @@ socket.on('state-changed', (data) => {
         
         questionAnswersGrid.appendChild(card);
       });
-      
     } else if (currentQuestion.type === 'true-false') {
       questionAnswersGrid.style.display = 'grid';
       questionAnswersGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
