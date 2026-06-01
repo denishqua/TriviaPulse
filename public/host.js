@@ -397,14 +397,17 @@ socket.on('state-changed', (data) => {
         shapeWrapper.className = 'answer-shape';
         
         if (optImg) {
+          shapeWrapper.style.width = '54px';
+          shapeWrapper.style.height = '54px';
+          
           const img = document.createElement('img');
           img.className = 'answer-opt-image';
           img.src = optImg;
-          img.style.width = '36px';
-          img.style.height = '36px';
+          img.style.width = '54px';
+          img.style.height = '54px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '6px';
-          img.style.border = '1px solid rgba(255,255,255,0.3)';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
           img.style.padding = '2px';
           shapeWrapper.appendChild(img);
@@ -443,14 +446,17 @@ socket.on('state-changed', (data) => {
         shapeWrapper.className = 'answer-shape';
         
         if (cfg.img) {
+          shapeWrapper.style.width = '54px';
+          shapeWrapper.style.height = '54px';
+          
           const img = document.createElement('img');
           img.className = 'answer-opt-image';
           img.src = cfg.img;
-          img.style.width = '36px';
-          img.style.height = '36px';
+          img.style.width = '54px';
+          img.style.height = '54px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '6px';
-          img.style.border = '1px solid rgba(255,255,255,0.3)';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
           img.style.background = 'rgba(255,255,255,0.1)';
           img.style.padding = '2px';
           shapeWrapper.appendChild(img);
@@ -591,11 +597,13 @@ socket.on('state-changed', (data) => {
         if (cfg.img) {
           const img = document.createElement('img');
           img.src = cfg.img;
-          img.style.width = '24px';
-          img.style.height = '24px';
+          img.style.width = '64px';
+          img.style.height = '64px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '4px';
-          img.style.border = '1px solid rgba(255,255,255,0.2)';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
+          img.style.padding = '2px';
           labelDiv.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');
@@ -665,11 +673,13 @@ socket.on('state-changed', (data) => {
         if (optImg) {
           const img = document.createElement('img');
           img.src = optImg;
-          img.style.width = '24px';
-          img.style.height = '24px';
+          img.style.width = '64px';
+          img.style.height = '64px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '4px';
-          img.style.border = '1px solid rgba(255,255,255,0.2)';
+          img.style.borderRadius = '8px';
+          img.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          img.style.background = 'rgba(255,255,255,0.1)';
+          img.style.padding = '2px';
           labelDiv.appendChild(img);
         } else {
           const shapeIcon = document.createElement('div');

@@ -145,13 +145,13 @@ socket.on('state-changed', (data) => {
           const img = document.createElement('img');
           img.className = 'player-opt-img';
           img.src = optImgs[idx];
-          img.style.width = '56px';
-          img.style.height = '56px';
+          img.style.width = '96px';
+          img.style.height = '96px';
           img.style.objectFit = 'contain';
-          img.style.borderRadius = '8px';
-          img.style.border = '1.5px solid rgba(255,255,255,0.35)';
-          img.style.background = 'rgba(255,255,255,0.1)';
-          img.style.padding = '2px';
+          img.style.borderRadius = '12px';
+          img.style.border = '2px solid rgba(255,255,255,0.45)';
+          img.style.background = 'rgba(255,255,255,0.15)';
+          img.style.padding = '4px';
           btn.appendChild(img);
         } else {
           const shapeDiv = document.createElement('div');
@@ -181,6 +181,13 @@ socket.on('state-changed', (data) => {
         if (optImgs[0]) {
           imgTrue.src = optImgs[0];
           imgTrue.style.display = 'block';
+          imgTrue.style.width = '64px';
+          imgTrue.style.height = '64px';
+          imgTrue.style.objectFit = 'contain';
+          imgTrue.style.borderRadius = '8px';
+          imgTrue.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          imgTrue.style.background = 'rgba(255,255,255,0.1)';
+          imgTrue.style.padding = '2px';
           if (shapeTrue) shapeTrue.style.display = 'none';
         } else {
           imgTrue.src = '';
@@ -192,6 +199,13 @@ socket.on('state-changed', (data) => {
         if (optImgs[1]) {
           imgFalse.src = optImgs[1];
           imgFalse.style.display = 'block';
+          imgFalse.style.width = '64px';
+          imgFalse.style.height = '64px';
+          imgFalse.style.objectFit = 'contain';
+          imgFalse.style.borderRadius = '8px';
+          imgFalse.style.border = '1.5px solid rgba(255,255,255,0.3)';
+          imgFalse.style.background = 'rgba(255,255,255,0.1)';
+          imgFalse.style.padding = '2px';
           if (shapeFalse) shapeFalse.style.display = 'none';
         } else {
           imgFalse.src = '';
