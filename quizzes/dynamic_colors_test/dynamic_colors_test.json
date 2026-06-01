@@ -61,6 +61,7 @@
     "type": "survey",
     "question": "Select your ultimate favorite cosmic constellation or star cluster! (20 Options Survey)",
     "timeLimit": 35,
+    "maxVotes": 5,
     "questionImage": "quizzes/dynamic_colors_test/nebula.svg",
     "options": [
       "Orion the Hunter",
