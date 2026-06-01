@@ -175,6 +175,9 @@ io.on('connection', (socket) => {
               }
             });
           }
+          if (q.type === 'true-false' && q.options.length === 0) {
+            q.options = ['True', 'False'];
+          }
           questions.push(q);
         }
       } else {
@@ -224,7 +227,9 @@ io.on('connection', (socket) => {
           q.questionimage = q.questionimage || '';
           q.correctanswer = q.correctanswer || '';
 
-          // Parse list details
+          if (q.type === 'true-false' && q.options.length === 0) {
+            q.options = ['True', 'False'];
+          }
           q.timeLimit = parseInt(q.timelimit) || 20; // Default 20 seconds
           questions.push(q);
         }

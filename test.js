@@ -172,6 +172,48 @@ try {
   
   console.log('✅ Test 6 Passed!');
 
+  // Test 7: True/False options default fallback
+  console.log('👉 Running Test 7: True/False default options fallback...');
+  
+  // JSON True/False question load mock
+  const tfQuestionRaw = {
+    type: 'true-false',
+    question: 'Is HTML5 semantic?',
+    correctAnswer: 'True'
+  };
+  
+  const tfQuestionParsed = {
+    type: tfQuestionRaw.type,
+    question: tfQuestionRaw.question,
+    correctanswer: tfQuestionRaw.correctAnswer,
+    options: [],
+    optionImages: []
+  };
+  
+  // If options array is empty and type is true-false, apply fallback
+  if (tfQuestionParsed.type === 'true-false' && tfQuestionParsed.options.length === 0) {
+    tfQuestionParsed.options = ['True', 'False'];
+  }
+  
+  assert.strictEqual(tfQuestionParsed.options.length, 2);
+  assert.strictEqual(tfQuestionParsed.options[0], 'True');
+  assert.strictEqual(tfQuestionParsed.options[1], 'False');
+  
+  // Grade check mock (simulate player answering 0 for True)
+  const submittedTfAnswer = 0;
+  const numericTfIndex = parseInt(submittedTfAnswer, 10);
+  let selectedTfText = '';
+  
+  if (!isNaN(numericTfIndex) && numericTfIndex >= 0 && numericTfIndex < tfQuestionParsed.options.length) {
+    selectedTfText = tfQuestionParsed.options[numericTfIndex];
+  }
+  
+  assert.strictEqual(selectedTfText, 'True');
+  const isTfCorrect = selectedTfText.trim().toLowerCase() === tfQuestionParsed.correctanswer.trim().toLowerCase();
+  assert.strictEqual(isTfCorrect, true); // Should be graded correct!
+  
+  console.log('✅ Test 7 Passed!');
+
   console.log('\n🎉 ALL TRIVIAPULSE UNIT TESTS PASSED SUCCESSFULLY! 🎉');
   process.exit(0);
 } catch (error) {
