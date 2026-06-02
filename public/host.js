@@ -1122,20 +1122,21 @@ socket.on('state-changed', (data) => {
             let choicesHtml = '';
             if (survey.topChoices) {
               survey.topChoices.filter(c => c.count > 0).forEach((choice, choiceIdx) => {
-                const badge = ['🥇', '🥈', '🥉'][choiceIdx] || `${choiceIdx + 1}.`;
+                const rank = choice.rank || (choiceIdx + 1);
+                const badge = ['🥇', '🥈', '🥉'][rank - 1] || `${rank}.`;
                 let optImgHtml = '';
                 if (choice.image) {
-                  optImgHtml = `<img src="${choice.image}" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); padding: 2px;" />`;
+                  optImgHtml = `<img src="${choice.image}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 0 12px rgba(255,255,255,0.05); padding: 2px;" />`;
                 }
 
                 choicesHtml += `
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                      <span style="font-size: 1.4rem; line-height: 1;">${badge}</span>
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                      <span style="font-size: 1.8rem; line-height: 1;">${badge}</span>
                       ${optImgHtml}
-                      <span style="font-weight: 600; color: var(--text-secondary); font-size: 1rem;">${escapeHtml(choice.text)}</span>
+                      <span style="font-weight: 700; color: var(--text-primary); font-size: 1.25rem;">${escapeHtml(choice.text)}</span>
                     </div>
-                    <span style="font-weight: 800; color: var(--purple-neon); font-size: 1.1rem;">${choice.count} ${choice.count === 1 ? 'vote' : 'votes'}</span>
+                    <span style="font-weight: 800; color: var(--purple-neon); font-size: 1.35rem; text-shadow: 0 0 10px rgba(186, 85, 211, 0.4);">${choice.count} ${choice.count === 1 ? 'vote' : 'votes'}</span>
                   </div>
                 `;
               });
