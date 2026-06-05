@@ -221,6 +221,7 @@ const handleStateChanged = (data) => {
       const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
       const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
       const optImgs = data.question.optionImages || [];
+      const optCount = data.question.options.length;
 
       // Multi-vote state
       let allocatedVotes = new Array(optCount).fill(0);
