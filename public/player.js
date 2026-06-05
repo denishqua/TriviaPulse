@@ -215,14 +215,8 @@ const handleStateChanged = (data) => {
         if (currentSubmitBtn) currentSubmitBtn.style.display = 'none';
       }
 
-      const optCount = data.question.options.length;
-      if (optCount <= 4) {
-        gridContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-      } else if (optCount <= 9) {
-        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-      } else {
-        gridContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
-      }
+      // Always use 2 columns to prevent horizontal overflow on mobile screens
+      gridContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
       
       const colors = ['red', 'blue', 'yellow', 'green', 'purple', 'pink', 'orange', 'teal', 'cyan', 'amber'];
       const shapes = ['tri', 'dia', 'cir', 'squ', 'hex', 'sta', 'pen', 'cro', 'cre', 'hea'];
