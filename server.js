@@ -276,7 +276,8 @@ io.on('connection', (socket) => {
         hostSocketId: socket.id,
         quizName,
         questions,
-        players: new Map(), // socketId -> playerDetails
+        players: new Map(), // playerId -> playerDetails
+        socketToPlayer: new Map(), // socketId -> playerId
         gameState: 'LOBBY',
         currentQuestionIndex: -1,
         questionStartTime: 0,
@@ -329,28 +330,34 @@ io.on('connection', (socket) => {
     if (game.gameState !== 'LOBBY') return; // Kick only allowed during lobby setup
     
     // Find the player by nickname
-    let targetSocketId = null;
-    for (const [sId, player] of game.players.entries()) {
+    let targetPlayerId = null;
+    for (const [pId, player] of game.players.entries()) {
       if (player.nickname.toLowerCase() === nickname.toLowerCase().trim()) {
-        targetSocketId = sId;
+        targetPlayerId = pId;
         break;
       }
     }
     
-    if (targetSocketId) {
-      const playerDetails = game.players.get(targetSocketId);
+    if (targetPlayerId) {
+      const playerDetails = game.players.get(targetPlayerId);
+      const targetSocketId = playerDetails.socketId;
       
       // Notify player client they have been kicked
-      io.to(targetSocketId).emit('kicked', { message: 'You have been removed from the lobby by the host.' });
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('kicked', { message: 'You have been removed from the lobby by the host.' });
+      }
       
       // Remove player details from session
-      game.players.delete(targetSocketId);
-      game.answeredThisQuestion.delete(targetSocketId);
-      
-      // Clean up player socket
-      const targetSocket = io.sockets.sockets.get(targetSocketId);
-      if (targetSocket) {
-        targetSocket.leave(`game_${pin}`);
+      game.players.delete(targetPlayerId);
+      if (targetSocketId) {
+        game.socketToPlayer.delete(targetSocketId);
+        game.answeredThisQuestion.delete(targetPlayerId);
+        
+        // Clean up player socket
+        const targetSocket = io.sockets.sockets.get(targetSocketId);
+        if (targetSocket) {
+          targetSocket.leave(`game_${pin}`);
+        }
       }
       
       console.log(`Player ${playerDetails.nickname} was kicked from the lobby by Host.`);
@@ -428,13 +435,80 @@ io.on('connection', (socket) => {
   // PLAYER EVENTS
   // ----------------------------------------------------
 
-  // Player joins lobby
-  socket.on('player-join', ({ nickname, avatar }) => {
-    const pin = 'local_game';
-    const game = games.get(pin);
+  // Player joins lobby or auto-rejoins active game
+  socket.on('player-join', ({ nickname, avatar, playerId, pin, isRejoining }) => {
+    const targetPin = pin || 'local_game';
+    const game = games.get(targetPin);
     if (!game) {
       return socket.emit('join-response', { success: false, message: 'Game lobby is not active. Please wait for the host.' });
     }
+
+    // --- REJOIN ATTEMPT ---
+    if (playerId && game.players.has(playerId)) {
+      const player = game.players.get(playerId);
+      console.log(`Player ${player.nickname} rejoining with playerId ${playerId}`);
+
+      // Clear any pending cleanup timer
+      if (player.disconnectTimeoutId) {
+        clearTimeout(player.disconnectTimeoutId);
+        player.disconnectTimeoutId = null;
+      }
+
+      // Remove any outdated socket bindings
+      for (const [sId, pId] of game.socketToPlayer.entries()) {
+        if (pId === playerId) {
+          game.socketToPlayer.delete(sId);
+        }
+      }
+
+      // Bind new socket
+      player.socketId = socket.id;
+      player.isConnected = true;
+      game.socketToPlayer.set(socket.id, playerId);
+      socket.join(`game_${targetPin}`);
+
+      // Confirm successful rejoin
+      socket.emit('join-response', {
+        success: true,
+        pin: targetPin,
+        nickname: player.nickname,
+        avatar: player.avatar,
+        gameState: game.gameState
+      });
+
+      // Synchronize player client state
+      socket.emit('sync-game-state', {
+        gameState: game.gameState,
+        nickname: player.nickname,
+        avatar: player.avatar,
+        pin: targetPin,
+        question: game.gameState === 'QUESTION' ? {
+          index: game.currentQuestionIndex,
+          total: game.questions.length,
+          question: game.questions[game.currentQuestionIndex].question,
+          type: game.questions[game.currentQuestionIndex].type,
+          timeLimit: game.questions[game.currentQuestionIndex].timeLimit,
+          maxVotes: game.questions[game.currentQuestionIndex].maxVotes || 1,
+          questionImage: game.questions[game.currentQuestionIndex].questionimage || '',
+          optionImages: game.questions[game.currentQuestionIndex].optionImages || [],
+          options: game.questions[game.currentQuestionIndex].options || []
+        } : null,
+        score: player.score,
+        streak: player.streak,
+        answerSubmitted: game.answeredThisQuestion.has(playerId)
+      });
+
+      // Notify Host of rejoin
+      io.to(game.hostSocketId).emit('player-reconnected', {
+        nickname: player.nickname,
+        playerCount: game.players.size,
+        players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+      });
+
+      return;
+    }
+
+    // --- NEW JOIN ATTEMPT ---
     if (game.gameState !== 'LOBBY') {
       return socket.emit('join-response', { success: false, message: 'Game has already started.' });
     }
@@ -453,23 +527,28 @@ io.on('connection', (socket) => {
 
     const cleanNickname = nickname.trim().substring(0, 16);
     const cleanAvatar = avatar ? avatar.trim().substring(0, 2) : '👾';
+    const cleanPlayerId = playerId || 'ply_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
 
     const player = {
+      playerId: cleanPlayerId,
       socketId: socket.id,
       nickname: cleanNickname,
       avatar: cleanAvatar,
       score: 0,
       streak: 0,
       answers: {}, // questionIndex -> { correct, points, answer, timeTaken }
-      lastAnswerCorrect: false
+      lastAnswerCorrect: false,
+      isConnected: true,
+      disconnectTimeoutId: null
     };
 
-    game.players.set(socket.id, player);
-    socket.join(`game_${pin}`);
+    game.players.set(cleanPlayerId, player);
+    game.socketToPlayer.set(socket.id, cleanPlayerId);
+    socket.join(`game_${targetPin}`);
 
     socket.emit('join-response', {
       success: true,
-      pin,
+      pin: targetPin,
       nickname: cleanNickname,
       avatar: cleanAvatar,
       gameState: 'LOBBY'
@@ -490,12 +569,14 @@ io.on('connection', (socket) => {
     const pin = 'local_game';
     const game = games.get(pin);
     if (!game || game.gameState !== 'QUESTION') return;
-    if (!game.players.has(socket.id)) return;
+    
+    const playerId = game.socketToPlayer.get(socket.id);
+    if (!playerId) return;
 
     // Only reject if it is a FINAL submission and they've already submitted finally
-    if (!isPartial && game.answeredThisQuestion.has(socket.id)) return;
+    if (!isPartial && game.answeredThisQuestion.has(playerId)) return;
 
-    const player = game.players.get(socket.id);
+    const player = game.players.get(playerId);
     const question = game.questions[game.currentQuestionIndex];
     const timeTaken = (Date.now() - game.questionStartTime) / 1000;
     
@@ -553,7 +634,7 @@ io.on('connection', (socket) => {
 
     // Only apply score, answersReceived, host notification, and ending question if NOT isPartial!
     if (!isPartial) {
-      game.answeredThisQuestion.add(socket.id);
+      game.answeredThisQuestion.add(playerId);
       player.score += pointsAwarded;
       player.answers[game.currentQuestionIndex] = {
         correct: isCorrect,
@@ -611,30 +692,51 @@ io.on('connection', (socket) => {
         break;
       }
       
-      // If a Player disconnected, notify Host and remove
-      if (game.players.has(socket.id)) {
-        const player = game.players.get(socket.id);
-        game.players.delete(socket.id);
-        game.answeredThisQuestion.delete(socket.id);
-
-        console.log(`Player ${player.nickname} left game ${pin}`);
+      // If a Player disconnected, start grace period if active game, or remove immediately if in lobby
+      if (game.socketToPlayer.has(socket.id)) {
+        const playerId = game.socketToPlayer.get(socket.id);
+        const player = game.players.get(playerId);
+        game.socketToPlayer.delete(socket.id);
 
         if (game.gameState === 'LOBBY') {
+          game.players.delete(playerId);
+          game.answeredThisQuestion.delete(playerId);
+          console.log(`Player ${player.nickname} left game ${pin} (lobby disconnect)`);
+
           io.to(game.hostSocketId).emit('player-left', {
             nickname: player.nickname,
             playerCount: game.players.size,
             players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
           });
-        } else if (game.gameState === 'QUESTION') {
-          // Update answer count triggers if a player leaves during active question
-          io.to(game.hostSocketId).emit('answers-count-update', {
-            count: game.answersReceived,
-            total: game.players.size
-          });
+        } else {
+          // Active game disconnect: mark offline and start 30s grace period
+          player.isConnected = false;
+          player.socketId = null;
+          console.log(`Player ${player.nickname} disconnected from active game ${pin}. Grace period started.`);
 
-          if (game.players.size > 0 && game.answersReceived >= game.players.size) {
-            endQuestion(game);
-          }
+          player.disconnectTimeoutId = setTimeout(() => {
+            console.log(`Grace period expired for player ${player.nickname}. Removing.`);
+            game.players.delete(playerId);
+            game.answeredThisQuestion.delete(playerId);
+
+            // Notify Host about leaving
+            io.to(game.hostSocketId).emit('player-left', {
+              nickname: player.nickname,
+              playerCount: game.players.size,
+              players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+            });
+
+            if (game.gameState === 'QUESTION') {
+              io.to(game.hostSocketId).emit('answers-count-update', {
+                count: game.answersReceived,
+                total: game.players.size
+              });
+
+              if (game.players.size > 0 && game.answersReceived >= game.players.size) {
+                endQuestion(game);
+              }
+            }
+          }, 30000); // 30 seconds
         }
         break;
       }
@@ -775,11 +877,58 @@ function endQuestion(game) {
     }
   }
 
+  // For survey questions, award 1 point for each vote matching the option(s) with the most votes
+  if (question.type === 'survey') {
+    const maxVotesCount = Math.max(...stats);
+    const winningIndices = new Set();
+    if (maxVotesCount > 0) {
+      stats.forEach((count, idx) => {
+        if (count === maxVotesCount) {
+          winningIndices.add(idx);
+        }
+      });
+    }
+
+    for (const player of game.players.values()) {
+      const playerAnswer = player.answers[game.currentQuestionIndex];
+      if (playerAnswer && playerAnswer.answer !== undefined && playerAnswer.answer !== null) {
+        const choice = playerAnswer.answer.toString().trim().toLowerCase();
+        const choices = choice.split(',');
+        let surveyPoints = 0;
+        choices.forEach(ch => {
+          const trimmed = ch.trim();
+          let selectedIndex = -1;
+          const numericIndex = parseInt(trimmed, 10);
+          if (!isNaN(numericIndex) && numericIndex >= 0 && numericIndex < question.options.length) {
+            selectedIndex = numericIndex;
+          } else {
+            const charCode = trimmed.charCodeAt(0) - 97;
+            if (trimmed.length === 1 && charCode >= 0 && charCode < question.options.length) {
+              selectedIndex = charCode;
+            } else {
+              selectedIndex = question.options.findIndex(opt => opt.trim().toLowerCase() === trimmed);
+            }
+          }
+          if (selectedIndex >= 0 && winningIndices.has(selectedIndex)) {
+            surveyPoints++;
+          }
+        });
+
+        // Award points
+        player.score += surveyPoints;
+        playerAnswer.points = surveyPoints;
+        playerAnswer.correct = (surveyPoints > 0);
+      }
+    }
+  }
+
   // Send results to everybody
   // For players, let them know if they got it right, their score, and their rank.
   const leaderboard = getLeaderboard(game);
 
-  for (const [socketId, player] of game.players.entries()) {
+  for (const player of game.players.values()) {
+    if (!player.isConnected || !player.socketId) continue;
+    const socketId = player.socketId;
     const playerAns = player.answers[game.currentQuestionIndex];
     const isCorrect = playerAns ? playerAns.correct : false;
     const pointsGained = playerAns ? playerAns.points : 0;

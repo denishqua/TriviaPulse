@@ -1,5 +1,12 @@
 const socket = io();
 
+// Generate or retrieve persistent playerId
+let playerId = localStorage.getItem('trivia_pulse_player_id');
+if (!playerId) {
+  playerId = 'ply_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+  localStorage.setItem('trivia_pulse_player_id', playerId);
+}
+
 // Memory state
 let myPin = 'local_game';
 let myNickname = null;
@@ -100,7 +107,7 @@ btnSubmitNickname.addEventListener('click', () => {
   const avatar = (inputCustomAvatar && inputCustomAvatar.value.trim()) || selectedAvatar;
   
   // Send join payload to server
-  socket.emit('player-join', { nickname, avatar });
+  socket.emit('player-join', { nickname, avatar, playerId, pin: myPin });
 });
 
 // Join Response
@@ -109,6 +116,11 @@ socket.on('join-response', (data) => {
     myNickname = data.nickname;
     const avatar = data.avatar || '👾';
     
+    // Save to localStorage for auto-rejoin
+    localStorage.setItem('trivia_pulse_room_pin', myPin);
+    localStorage.setItem('trivia_pulse_nickname', myNickname);
+    localStorage.setItem('trivia_pulse_avatar', avatar);
+
     playerNicknameHeader.innerHTML = `<span style="margin-right: 8px;">${avatar}</span>${myNickname}`;
     if (waitPlayerAvatar) {
       waitPlayerAvatar.textContent = avatar;
@@ -118,6 +130,10 @@ socket.on('join-response', (data) => {
     panelJoinNickname.style.display = 'none';
     panelLobbyWait.style.display = 'flex';
   } else {
+    // Clear saved join info on error to prevent endless loops
+    localStorage.removeItem('trivia_pulse_room_pin');
+    localStorage.removeItem('trivia_pulse_nickname');
+    localStorage.removeItem('trivia_pulse_avatar');
     nicknameError.textContent = data.message;
   }
 });
@@ -153,7 +169,7 @@ inputShortAnswer.addEventListener('keypress', (e) => {
 });
 
 // Game state transitions broadcasted to players
-socket.on('state-changed', (data) => {
+const handleStateChanged = (data) => {
   const state = data.gameState;
   console.log('Player State changed:', state);
 
@@ -298,14 +314,16 @@ socket.on('state-changed', (data) => {
             // Autosubmit partial choice
             socket.emit('player-submit-answer', { pin: myPin, answer: getFormattedChoices(), isPartial: true });
 
-            // Disable submit button since there are remaining votes
-            const submitBtn = document.getElementById('btn-submit-survey-votes');
-            if (submitBtn) {
-              submitBtn.disabled = true;
-              submitBtn.style.background = 'rgba(255, 255, 255, 0.05)';
-              submitBtn.style.color = 'var(--text-muted)';
-              submitBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              submitBtn.style.boxShadow = 'none';
+            // Disable submit button ONLY if no votes are cast at all
+            if (remainingVotes === maxVotes) {
+              const submitBtn = document.getElementById('btn-submit-survey-votes');
+              if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+                submitBtn.style.color = 'var(--text-muted)';
+                submitBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                submitBtn.style.boxShadow = 'none';
+              }
             }
           }
         });
@@ -349,16 +367,14 @@ socket.on('state-changed', (data) => {
               // Autosubmit partial choice
               socket.emit('player-submit-answer', { pin: myPin, answer: getFormattedChoices(), isPartial: true });
 
-              if (remainingVotes === 0) {
-                // Enable submit button and glow!
-                const submitBtn = document.getElementById('btn-submit-survey-votes');
-                if (submitBtn) {
-                  submitBtn.disabled = false;
-                  submitBtn.style.background = 'var(--purple-neon)';
-                  submitBtn.style.color = 'white';
-                  submitBtn.style.borderColor = 'var(--purple-neon)';
-                  submitBtn.style.boxShadow = 'var(--shadow-glow)';
-                }
+              // Enable submit button and glow since at least one vote is cast!
+              const submitBtn = document.getElementById('btn-submit-survey-votes');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.background = 'var(--purple-neon)';
+                submitBtn.style.color = 'white';
+                submitBtn.style.borderColor = 'var(--purple-neon)';
+                submitBtn.style.boxShadow = 'var(--shadow-glow)';
               }
             }
           } else {
@@ -374,7 +390,7 @@ socket.on('state-changed', (data) => {
         const submitBtn = document.getElementById('btn-submit-survey-votes');
         if (submitBtn) {
           submitBtn.addEventListener('click', () => {
-            if (remainingVotes === 0) {
+            if (remainingVotes < maxVotes) {
               const finalAns = getFormattedChoices();
               // Emit final answer (isPartial: false)
               socket.emit('player-submit-answer', { pin: myPin, answer: finalAns, isPartial: false });
@@ -436,11 +452,12 @@ socket.on('state-changed', (data) => {
       showPanel(panelControllerSa);
       inputShortAnswer.focus();
     }
-  } else if (state === 'LEADERBOARD' || state === 'PODIUM') {
+  } else if (state === 'RESULTS' || state === 'LEADERBOARD' || state === 'PODIUM') {
     showPanel(panelPlayerWait);
     playerWaitMessage.textContent = 'Look at the host screen for standings!';
   }
-});
+};
+socket.on('state-changed', handleStateChanged);
 
 // Question ends - feedback is dispatched individually to players
 socket.on('question-over', (data) => {
@@ -514,12 +531,18 @@ socket.on('question-over', (data) => {
 
 // Clean up if host drops
 socket.on('host-disconnected', () => {
+  localStorage.removeItem('trivia_pulse_room_pin');
+  localStorage.removeItem('trivia_pulse_nickname');
+  localStorage.removeItem('trivia_pulse_avatar');
   alert('The host has disconnected from the game.');
   window.location.reload();
 });
 
 // Clean up if player gets kicked
 socket.on('kicked', (data) => {
+  localStorage.removeItem('trivia_pulse_room_pin');
+  localStorage.removeItem('trivia_pulse_nickname');
+  localStorage.removeItem('trivia_pulse_avatar');
   alert(data.message || 'You have been removed from the lobby by the host.');
   window.location.reload();
 });
@@ -543,3 +566,56 @@ function showPanel(panelToShow) {
     panelToShow.style.display = 'block';
   }
 }
+
+// Handle Auto-Rejoin on Connection/Reconnection
+socket.on('connect', () => {
+  console.log('Socket connected, checking for active session...');
+  const savedPin = localStorage.getItem('trivia_pulse_room_pin');
+  const savedNickname = localStorage.getItem('trivia_pulse_nickname');
+  const savedAvatar = localStorage.getItem('trivia_pulse_avatar');
+  if (savedPin && savedNickname && savedAvatar && playerId) {
+    console.log('Attempting auto-rejoin for:', savedNickname);
+    socket.emit('player-join', {
+      nickname: savedNickname,
+      avatar: savedAvatar,
+      playerId: playerId,
+      pin: savedPin,
+      isRejoining: true
+    });
+  }
+});
+
+// Handle Session Re-sync from Server
+socket.on('sync-game-state', (data) => {
+  console.log('Rejoined successfully! Syncing game state:', data);
+  myNickname = data.nickname;
+  const avatar = data.avatar || '👾';
+  myPin = data.pin || 'local_game';
+
+  // Save/refresh localStorage in case it changed
+  localStorage.setItem('trivia_pulse_room_pin', myPin);
+  localStorage.setItem('trivia_pulse_nickname', myNickname);
+  localStorage.setItem('trivia_pulse_avatar', avatar);
+
+  playerNicknameHeader.innerHTML = `<span style="margin-right: 8px;">${avatar}</span>${myNickname}`;
+  if (waitPlayerAvatar) waitPlayerAvatar.textContent = avatar;
+  waitPlayerName.textContent = myNickname;
+
+  panelJoinNickname.style.display = 'none';
+
+  if (data.gameState === 'QUESTION') {
+    if (data.answerSubmitted) {
+      showPanel(panelPlayerWait);
+      playerWaitMessage.textContent = 'Answer submitted! Waiting for other players...';
+    } else {
+      handleStateChanged({
+        gameState: 'QUESTION',
+        question: data.question
+      });
+    }
+  } else {
+    handleStateChanged({
+      gameState: data.gameState
+    });
+  }
+});
