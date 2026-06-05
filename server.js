@@ -1102,5 +1102,7 @@ function startPinggyTunnel() {
   tunnelProcess.on('close', (code) => {
     console.log(`Pinggy SSH process exited with code ${code}`);
     publicTunnelUrl = '';
+    tunnelProcess = null;
+    io.emit('tunnel-failed', { code });
   });
 }

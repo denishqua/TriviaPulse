@@ -7,6 +7,8 @@ let quizName = '';
 let questionCount = 0;
 let timeRemainingInterval = null;
 let lastRankings = {}; // nickname -> rank from previous leaderboard
+let localIp = '';
+let localPort = 3000;
 
 // DOM Elements
 const stateSetup = document.getElementById('state-setup');
@@ -90,6 +92,8 @@ socket.on('game-created', (data) => {
   currentPin = data.pin;
   quizName = data.quizName;
   questionCount = data.questionCount;
+  localIp = data.localIp;
+  localPort = data.port;
   
   document.getElementById('header-quiz-name').textContent = quizName;
 
@@ -174,6 +178,36 @@ socket.on('tunnel-url-updated', (data) => {
       correctLevel: QRCode.CorrectLevel.M
     });
   }
+});
+
+// Event: Pinggy tunnel failed to start
+socket.on('tunnel-failed', (data) => {
+  console.error('Tunnel failed to start, exit code:', data.code);
+  
+  if (btnEnableTunnel) {
+    btnEnableTunnel.disabled = false;
+    btnEnableTunnel.textContent = '🌐 Enable Remote Play (Failed)';
+    btnEnableTunnel.style.background = 'linear-gradient(135deg, var(--red-tri), #ff335c)';
+  }
+
+  // Restore local IP address
+  const localUrl = (localIp.startsWith('http://') || localIp.startsWith('https://')) ? localIp : `http://${localIp}:${localPort}`;
+  lobbyUrl.textContent = localUrl;
+
+  const qrContainer = document.getElementById('lobby-qr');
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: localUrl,
+      width: 200,
+      height: 200,
+      colorDark: "#060417",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
+  
+  alert('Remote play tunnel failed to start. Falling back to local Wi-Fi join URL. Check your internet connection or firewalls.');
 });
 
 function renderLobbyPlayers(players) {

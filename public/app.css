@@ -429,8 +429,8 @@ select {
 }
 
 .q-title-compact {
-  font-size: 2rem;
-  margin-bottom: 14px;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
 }
 
 .question-image-box {
@@ -478,7 +478,7 @@ select {
 .host-grid-panel {
   display: grid;
   grid-template-columns: 1fr 300px;
-  gap: 30px;
+  gap: 20px;
   flex: 1;
 }
 
@@ -486,17 +486,17 @@ select {
 .answers-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 15px;
   width: 100%;
 }
 
 .answer-card {
-  border-radius: 20px;
-  padding: 30px 40px;
+  border-radius: 16px;
+  padding: 16px 28px;
   display: flex;
   align-items: center;
-  gap: 25px;
-  font-size: 1.6rem;
+  gap: 16px;
+  font-size: 1.35rem;
   font-weight: 700;
   color: white;
   box-shadow: var(--shadow-btn);
@@ -610,7 +610,7 @@ select {
 .stats-panel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 }
 
 .stat-box {
@@ -620,10 +620,11 @@ select {
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 20px !important;
 }
 
 .stat-box .count {
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 900;
   color: var(--yellow-cir);
 }
