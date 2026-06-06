@@ -9,6 +9,7 @@ let timeRemainingInterval = null;
 let lastRankings = {}; // nickname -> rank from previous leaderboard
 let localIp = '';
 let localPort = 3000;
+let currentQuestionAudio = null;
 
 // DOM Elements
 const stateSetup = document.getElementById('state-setup');
@@ -343,11 +344,27 @@ socket.on('state-changed', (data) => {
   const state = data.gameState;
   console.log('State changed:', state);
 
+  // Stop any active question audio for states other than INTRO or QUESTION
+  if (state !== 'INTRO' && state !== 'QUESTION' && currentQuestionAudio) {
+    currentQuestionAudio.pause();
+    currentQuestionAudio = null;
+  }
+
   if (data.question) {
     currentQuestion = data.question;
   }
 
   if (state === 'INTRO') {
+    // Stop and clear previous audio in case it is still playing
+    if (currentQuestionAudio) {
+      currentQuestionAudio.pause();
+      currentQuestionAudio = null;
+    }
+    // Play question audio if present
+    if (currentQuestion.questionAudio) {
+      currentQuestionAudio = new Audio(currentQuestion.questionAudio);
+      currentQuestionAudio.play().catch(e => console.log('Audio playback failed:', e));
+    }
     
     // Configure question details
     introQIndex.textContent = `QUESTION ${currentQuestion.index + 1} OF ${questionCount}`;

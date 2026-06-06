@@ -174,6 +174,7 @@ io.on('connection', (socket) => {
             timeLimit: parseInt(item.timeLimit) || parseInt(item.timelimit) || 20,
             maxVotes: parseInt(item.maxVotes) || parseInt(item.maxvotes) || 1,
             questionimage: item.questionImage || item.questionimage || '',
+            questionaudio: item.questionAudio || item.questionaudio || item.audio || '',
             correctanswer: item.correctAnswer || item.correctanswer || '',
             options: [],
             optionImages: []
@@ -243,6 +244,7 @@ io.on('connection', (socket) => {
           q.optionImages = optionImagesList;
           q.type = q.type || 'multiple-choice';
           q.questionimage = q.questionimage || '';
+          q.questionaudio = q.questionaudio || q.questionAudio || q.audio || '';
           q.correctanswer = q.correctanswer || '';
           q.maxVotes = parseInt(q.maxvotes) || parseInt(q.maxVotes) || 1;
 
@@ -490,6 +492,7 @@ io.on('connection', (socket) => {
           timeLimit: game.questions[game.currentQuestionIndex].timeLimit,
           maxVotes: game.questions[game.currentQuestionIndex].maxVotes || 1,
           questionImage: game.questions[game.currentQuestionIndex].questionimage || '',
+          questionAudio: game.questions[game.currentQuestionIndex].questionaudio || '',
           optionImages: game.questions[game.currentQuestionIndex].optionImages || [],
           options: game.questions[game.currentQuestionIndex].options || []
         } : null,
@@ -767,6 +770,7 @@ function startQuestionIntro(game) {
     timeLimit: question.timeLimit,
     maxVotes: question.maxVotes || 1,
     questionImage: question.questionimage || '',
+    questionAudio: question.questionaudio || '',
     optionImages: question.optionImages || [],
     options: question.options || []
   };

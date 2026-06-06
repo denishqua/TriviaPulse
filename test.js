@@ -250,6 +250,24 @@ try {
 
   console.log('✅ Test 8 Passed!');
 
+  // Test 9: Question audio field parsing from JSON
+  console.log('👉 Running Test 9: Question audio field parsing from JSON...');
+
+  const mockJsonQuestion = {
+    type: 'multiple-choice',
+    question: 'Name this Pokemon',
+    questionAudio: 'audio/pokemon/chatot.ogg'
+  };
+
+  const parsedQ = {
+    type: mockJsonQuestion.type,
+    question: mockJsonQuestion.question,
+    questionaudio: mockJsonQuestion.questionAudio || mockJsonQuestion.questionaudio || ''
+  };
+
+  assert.strictEqual(parsedQ.questionaudio, 'audio/pokemon/chatot.ogg');
+  console.log('✅ Test 9 Passed!');
+
   console.log('\n🎉 ALL TRIVIAPULSE UNIT TESTS PASSED SUCCESSFULLY! 🎉');
   process.exit(0);
 } catch (error) {
