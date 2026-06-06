@@ -894,7 +894,7 @@ function endQuestion(game) {
       if (playerAnswer && playerAnswer.answer !== undefined && playerAnswer.answer !== null) {
         const choice = playerAnswer.answer.toString().trim().toLowerCase();
         const choices = choice.split(',');
-        let surveyPoints = 0;
+        let matchedWinning = false;
         choices.forEach(ch => {
           const trimmed = ch.trim();
           let selectedIndex = -1;
@@ -910,14 +910,15 @@ function endQuestion(game) {
             }
           }
           if (selectedIndex >= 0 && winningIndices.has(selectedIndex)) {
-            surveyPoints++;
+            matchedWinning = true;
           }
         });
 
-        // Award points
+        // Award max 1 point per survey round if they voted for any winning/top option
+        const surveyPoints = matchedWinning ? 1 : 0;
         player.score += surveyPoints;
         playerAnswer.points = surveyPoints;
-        playerAnswer.correct = (surveyPoints > 0);
+        playerAnswer.correct = matchedWinning;
       }
     }
   }

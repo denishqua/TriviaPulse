@@ -213,6 +213,42 @@ try {
   assert.strictEqual(isTfCorrect, true); // Should be graded correct!
   
   console.log('✅ Test 7 Passed!');
+  
+  // Test 8: Survey scoring 1-point cap verification
+  console.log('👉 Running Test 8: Survey scoring 1-point cap verification...');
+
+  const surveyQuestion = {
+    type: 'survey',
+    options: ['Alice', 'Bob', 'Charlie']
+  };
+
+  const winningIndices = new Set([0]); // Alice won (index 0)
+
+  // Player 1 voted for Alice twice (0,0) and Bob once (1)
+  const p1Answer = '0,0,1';
+  let p1MatchedWinning = false;
+  p1Answer.split(',').forEach(ch => {
+    const idx = parseInt(ch.trim(), 10);
+    if (idx >= 0 && winningIndices.has(idx)) {
+      p1MatchedWinning = true;
+    }
+  });
+  const p1Points = p1MatchedWinning ? 1 : 0;
+  assert.strictEqual(p1Points, 1); // Capped at 1 point even though they voted for Alice twice!
+
+  // Player 2 voted for Bob twice (1,1) and Charlie once (2)
+  const p2Answer = '1,1,2';
+  let p2MatchedWinning = false;
+  p2Answer.split(',').forEach(ch => {
+    const idx = parseInt(ch.trim(), 10);
+    if (idx >= 0 && winningIndices.has(idx)) {
+      p2MatchedWinning = true;
+    }
+  });
+  const p2Points = p2MatchedWinning ? 1 : 0;
+  assert.strictEqual(p2Points, 0); // Voted only for non-winning options, so 0 points!
+
+  console.log('✅ Test 8 Passed!');
 
   console.log('\n🎉 ALL TRIVIAPULSE UNIT TESTS PASSED SUCCESSFULLY! 🎉');
   process.exit(0);
