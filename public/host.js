@@ -1027,6 +1027,7 @@ socket.on('state-changed', (data) => {
         row.innerHTML = `
           <div class="left">
             <span class="rank">${idx + 1}</span>
+            <span style="margin-right: 8px; font-size: 1.4rem;">${player.avatar || '👾'}</span>
             <span>${escapeHtml(player.nickname)} ${streakBadge}</span>
             ${rankChangeBadge}
           </div>
@@ -1085,6 +1086,7 @@ socket.on('state-changed', (data) => {
       row.innerHTML = `
         <div class="left">
           <span class="rank">${idx + 1}</span>
+          <span style="margin-right: 8px; font-size: 1.4rem;">${player.avatar || '👾'}</span>
           <span>${escapeHtml(player.nickname)} ${streakBadge}</span>
           ${rankChangeBadge}
         </div>

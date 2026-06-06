@@ -959,6 +959,7 @@ function getLeaderboard(game) {
   return Array.from(game.players.values())
     .map(p => ({
       nickname: p.nickname,
+      avatar: p.avatar || '👾',
       score: p.score,
       streak: p.streak,
       lastAnswerCorrect: p.lastAnswerCorrect
