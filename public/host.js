@@ -979,6 +979,65 @@ socket.on('state-changed', (data) => {
       });
     }
 
+    // Show leaderboard under survey results if currentQuestion.type === 'survey'
+    const resultsLeaderboardContainer = document.getElementById('results-leaderboard-container');
+    const resultsLeaderboardList = document.getElementById('results-leaderboard-list');
+
+    if (currentQuestion.type === 'survey' && data.leaderboard) {
+      resultsLeaderboardList.innerHTML = '';
+      const topFive = data.leaderboard.slice(0, 5);
+      const newRankings = {};
+
+      topFive.forEach((player, idx) => {
+        newRankings[player.nickname] = idx + 1;
+        const row = document.createElement('div');
+        row.className = `leaderboard-row ${idx < 3 ? 'top-three' : ''}`;
+
+        // Rank change badge
+        let rankChangeBadge = '';
+        if (lastRankings[player.nickname] !== undefined) {
+          const delta = lastRankings[player.nickname] - (idx + 1);
+          if (delta > 0) {
+            rankChangeBadge = `<span class="rank-change up">▲${delta}</span>`;
+          } else if (delta < 0) {
+            rankChangeBadge = `<span class="rank-change down">▼${Math.abs(delta)}</span>`;
+          } else {
+            rankChangeBadge = `<span class="rank-change same">—</span>`;
+          }
+        }
+
+        let streakBadge = '';
+        if (player.streak >= 2) {
+          streakBadge = `<span class="streak-tag">🔥 STREAK x${player.streak}</span>`;
+        }
+
+        row.innerHTML = `
+          <div class="left">
+            <span class="rank">${idx + 1}</span>
+            <span>${escapeHtml(player.nickname)} ${streakBadge}</span>
+            ${rankChangeBadge}
+          </div>
+          <div class="score">${player.score}</div>
+        `;
+
+        // Stagger each row's entrance
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+          row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          row.style.opacity = '1';
+          row.style.transform = 'translateX(0)';
+        }, idx * 120);
+
+        resultsLeaderboardList.appendChild(row);
+      });
+
+      lastRankings = newRankings;
+      resultsLeaderboardContainer.style.display = 'block';
+    } else {
+      resultsLeaderboardContainer.style.display = 'none';
+    }
+
     showSection(stateResults);
 
   } else if (state === 'LEADERBOARD') {
