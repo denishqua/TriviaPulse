@@ -595,6 +595,19 @@ socket.on('state-changed', (data) => {
     resultsQTitle.textContent = currentQuestion.question;
     resultsCorrectText.textContent = data.correctAnswer;
 
+    // Render results question image if present
+    const resultsImageContainer = document.getElementById('results-image-container');
+    const resultsImage = document.getElementById('results-image');
+    if (resultsImageContainer && resultsImage) {
+      if (currentQuestion.questionImage) {
+        resultsImage.src = currentQuestion.questionImage;
+        resultsImageContainer.style.display = 'flex';
+      } else {
+        resultsImage.src = '';
+        resultsImageContainer.style.display = 'none';
+      }
+    }
+
     // Hide correct answer section if question is a survey
     const correctAnsContainer = document.querySelector('.results-correct-answer');
     if (correctAnsContainer) {
