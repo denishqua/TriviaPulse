@@ -47,6 +47,28 @@ function getLocalIpAddress() {
   return 'localhost';
 }
 
+// Helper to get count of active (non-removed) players in a game
+function getActivePlayersCount(game) {
+  let count = 0;
+  for (const player of game.players.values()) {
+    if (!player.isRemoved) {
+      count++;
+    }
+  }
+  return count;
+}
+
+// Helper to get details of active (non-removed) players in a game
+function getActivePlayersList(game) {
+  return Array.from(game.players.values())
+    .filter(p => !p.isRemoved)
+    .map(p => ({
+      nickname: p.nickname,
+      avatar: p.avatar,
+      isConnected: p.isConnected
+    }));
+}
+
 // RFC 4180 compliant CSV Parser
 function parseCSV(text) {
   const lines = [];
@@ -316,7 +338,7 @@ io.on('connection', (socket) => {
     const pin = 'local_game';
     const game = games.get(pin);
     if (!game || game.hostSocketId !== socket.id) return;
-    if (game.players.size === 0) {
+    if (getActivePlayersCount(game) === 0) {
       return socket.emit('error-msg', { message: 'Cannot start game with 0 players.' });
     }
 
@@ -367,8 +389,8 @@ io.on('connection', (socket) => {
       // Broadcast updated list to Host
       io.to(game.hostSocketId).emit('player-left', {
         nickname: playerDetails.nickname,
-        playerCount: game.players.size,
-        players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+        playerCount: getActivePlayersCount(game),
+        players: getActivePlayersList(game)
       });
     }
   });
@@ -455,6 +477,7 @@ io.on('connection', (socket) => {
         clearTimeout(player.disconnectTimeoutId);
         player.disconnectTimeoutId = null;
       }
+      player.isRemoved = false; // Reset removed state if they rejoin
 
       // Remove any outdated socket bindings
       for (const [sId, pId] of game.socketToPlayer.entries()) {
@@ -504,8 +527,8 @@ io.on('connection', (socket) => {
       // Notify Host of rejoin
       io.to(game.hostSocketId).emit('player-reconnected', {
         nickname: player.nickname,
-        playerCount: game.players.size,
-        players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+        playerCount: getActivePlayersCount(game),
+        players: getActivePlayersList(game)
       });
 
       return;
@@ -517,7 +540,7 @@ io.on('connection', (socket) => {
     }
 
     // Limit lobby to 50 players
-    if (game.players.size >= 50) {
+    if (getActivePlayersCount(game) >= 50) {
       return socket.emit('join-response', { success: false, message: 'Lobby is full. Max 50 players allowed.' });
     }
 
@@ -542,7 +565,8 @@ io.on('connection', (socket) => {
       answers: {}, // questionIndex -> { correct, points, answer, timeTaken }
       lastAnswerCorrect: false,
       isConnected: true,
-      disconnectTimeoutId: null
+      disconnectTimeoutId: null,
+      isRemoved: false
     };
 
     game.players.set(cleanPlayerId, player);
@@ -560,8 +584,8 @@ io.on('connection', (socket) => {
     // Notify Host
     io.to(game.hostSocketId).emit('player-joined', {
       nickname: cleanNickname,
-      playerCount: game.players.size,
-      players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+      playerCount: getActivePlayersCount(game),
+      players: getActivePlayersList(game)
     });
 
     console.log(`Player ${cleanNickname} joined the local lobby`);
@@ -651,7 +675,7 @@ io.on('connection', (socket) => {
       // Notify Host about answers count
       io.to(game.hostSocketId).emit('answers-count-update', {
         count: game.answersReceived,
-        total: game.players.size
+        total: getActivePlayersCount(game)
       });
 
       // Send immediate confirmation to player
@@ -663,7 +687,7 @@ io.on('connection', (socket) => {
       });
 
       // If everyone answered, end question immediately
-      if (game.answersReceived >= game.players.size) {
+      if (game.answersReceived >= getActivePlayersCount(game)) {
         endQuestion(game);
       }
     } else {
@@ -708,38 +732,38 @@ io.on('connection', (socket) => {
 
           io.to(game.hostSocketId).emit('player-left', {
             nickname: player.nickname,
-            playerCount: game.players.size,
-            players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+            playerCount: getActivePlayersCount(game),
+            players: getActivePlayersList(game)
           });
         } else {
-          // Active game disconnect: mark offline and start 30s grace period
+          // Active game disconnect: mark offline and start 5m grace period
           player.isConnected = false;
           player.socketId = null;
           console.log(`Player ${player.nickname} disconnected from active game ${pin}. Grace period started.`);
 
           player.disconnectTimeoutId = setTimeout(() => {
-            console.log(`Grace period expired for player ${player.nickname}. Removing.`);
-            game.players.delete(playerId);
-            game.answeredThisQuestion.delete(playerId);
+            console.log(`Grace period expired for player ${player.nickname}. Marking as permanently removed.`);
+            player.isRemoved = true;
+            player.socketId = null;
 
             // Notify Host about leaving
             io.to(game.hostSocketId).emit('player-left', {
               nickname: player.nickname,
-              playerCount: game.players.size,
-              players: Array.from(game.players.values()).map(p => ({ nickname: p.nickname, avatar: p.avatar }))
+              playerCount: getActivePlayersCount(game),
+              players: getActivePlayersList(game)
             });
 
             if (game.gameState === 'QUESTION') {
               io.to(game.hostSocketId).emit('answers-count-update', {
                 count: game.answersReceived,
-                total: game.players.size
+                total: getActivePlayersCount(game)
               });
 
-              if (game.players.size > 0 && game.answersReceived >= game.players.size) {
+              if (getActivePlayersCount(game) > 0 && game.answersReceived >= getActivePlayersCount(game)) {
                 endQuestion(game);
               }
             }
-          }, 30000); // 30 seconds
+          }, 300000); // 5 minutes
         }
         break;
       }
