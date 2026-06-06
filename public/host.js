@@ -1154,6 +1154,12 @@ socket.on('state-changed', (data) => {
               namesWrapper.style.marginBottom = '12px';
               namesWrapper.style.width = '100%';
 
+              const avatarEl = document.createElement('div');
+              avatarEl.style.fontSize = `calc(${meta.nameSize} * 1.5)`;
+              avatarEl.style.marginBottom = '4px';
+              avatarEl.textContent = p.avatar || '👾';
+              namesWrapper.appendChild(avatarEl);
+
               const nameEl = document.createElement('div');
               nameEl.className = 'podium-player-name';
               nameEl.style.fontSize = meta.nameSize;
