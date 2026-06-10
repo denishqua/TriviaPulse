@@ -94,6 +94,8 @@ const lblFeedbackStreak = document.getElementById('lbl-feedback-streak');
 const lblFeedbackRankC = document.getElementById('lbl-feedback-rank-c');
 const lblFeedbackRankI = document.getElementById('lbl-feedback-rank-i');
 const lblFeedbackIncorrectTitle = document.getElementById('lbl-feedback-incorrect-title');
+const feedbackCorrectAnswerContainer = document.getElementById('feedback-correct-answer-container');
+const lblFeedbackCorrectAnswer = document.getElementById('lbl-feedback-correct-answer');
 
 // Nickname Join Submit Handler
 btnSubmitNickname.addEventListener('click', () => {
@@ -461,6 +463,10 @@ socket.on('question-over', (data) => {
     panel.style.display = 'none';
   });
 
+  if (feedbackCorrectAnswerContainer) {
+    feedbackCorrectAnswerContainer.style.display = 'none';
+  }
+
   // Reset feedback-correct default styles
   feedbackCorrect.style.background = '';
   feedbackCorrect.style.border = '';
@@ -521,6 +527,13 @@ socket.on('question-over', (data) => {
       lblFeedbackIncorrectTitle.textContent = "INCORRECT 😢";
     }
     lblFeedbackRankI.textContent = `Current Rank: ${data.rank}`;
+
+    if (data.questionType === 'short-answer' && data.correctAnswer) {
+      if (feedbackCorrectAnswerContainer && lblFeedbackCorrectAnswer) {
+        lblFeedbackCorrectAnswer.textContent = data.correctAnswer;
+        feedbackCorrectAnswerContainer.style.display = 'flex';
+      }
+    }
   }
 });
 

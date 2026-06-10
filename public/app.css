@@ -1156,3 +1156,38 @@ select {
   width: 70px;
   height: 70px;
 }
+
+/* Player Feedback Correct Answer styling */
+.feedback-correct-answer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 16px 24px;
+  width: 90%;
+  max-width: 340px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.feedback-correct-answer-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.feedback-correct-answer-text {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--green-squ);
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  word-break: break-word;
+}

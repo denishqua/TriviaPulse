@@ -971,7 +971,8 @@ function endQuestion(game) {
       streak: player.streak,
       rank: playerRank,
       wasAnswered: !!playerAns,
-      isSurvey: question.type === 'survey'
+      isSurvey: question.type === 'survey',
+      questionType: question.type
     });
   }
 
