@@ -25,6 +25,8 @@
       <span>TriviaPulse <span style="font-weight: 300; font-size: 1.2rem; color: var(--purple-neon);">Cosmic Host</span></span>
     </div>
     <div id="header-quiz-name" style="font-weight: 700; font-size: 1.2rem; color: var(--yellow-cir);"></div>
+    
+
   </header>
 
   <main class="host-container">
@@ -147,6 +149,13 @@
         <strong id="results-correct-text" style="color: var(--green-squ);">Paris</strong>
       </div>
 
+      <div id="results-wrong-answers-container" style="display: none; margin-top: 30px; padding: 20px; border-radius: 16px; border: 2px solid var(--red-tri); background: rgba(239, 68, 68, 0.15); text-align: center;">
+        <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--red-tri); margin-bottom: 15px;" class="glow-text">Top Wrong Answers</h3>
+        <div id="results-wrong-answers-list" style="display: flex; flex-direction: column; gap: 10px; font-size: 1.2rem; font-weight: 700;">
+          <!-- Dynamically populated top 5 wrong answers -->
+        </div>
+      </div>
+
       <!-- Leaderboard under survey results -->
       <div id="results-leaderboard-container" style="display: none; margin-top: 40px; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto;">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; text-align: center; color: var(--purple-neon);" class="glow-text">Current Leaderboard</h2>
@@ -204,6 +213,17 @@
             <span class="podium-rank-num">3</span>
             <span class="podium-score" id="podium-3rd-score">0 pts</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Full Ranking Panel -->
+      <div id="podium-ranking-panel" class="glass-panel" style="display: none; margin-top: 50px; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; padding: 30px; text-align: left; border-color: var(--pink-neon);">
+        <h2 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 25px; text-align: center; color: var(--pink-neon);" class="glow-text">Full Rankings 📊</h2>
+        <div class="leaderboard-list" id="podium-ranking-list">
+          <!-- Dynamically populated rows -->
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+          <button id="btn-show-more-rankings" class="btn-primary" style="background: linear-gradient(135deg, var(--pink-neon), var(--purple-neon)); font-size: 1rem; padding: 12px 24px; border-radius: 12px;">Show More</button>
         </div>
       </div>
 

@@ -847,10 +847,11 @@ function endQuestion(game) {
 
   // Calculate statistics dynamically
   let stats;
+  const wrongAnswersMap = new Map();
   if (question.type === 'multiple-choice' || question.type === 'true-false' || question.type === 'survey') {
     stats = new Array(question.options.length).fill(0);
   } else {
-    stats = { shortAnswerMatches: 0, shortAnswerWrong: 0 };
+    stats = { shortAnswerMatches: 0, shortAnswerWrong: 0, topWrongAnswers: [] };
   }
   
   for (const player of game.players.values()) {
@@ -899,8 +900,20 @@ function endQuestion(game) {
           stats[selectedIndex]++;
         }
       } else if (question.type === 'short-answer') {
-        if (playerAnswer.correct) stats.shortAnswerMatches++;
-        else stats.shortAnswerWrong++;
+        if (playerAnswer.correct) {
+          stats.shortAnswerMatches++;
+        } else {
+          stats.shortAnswerWrong++;
+          const rawAns = playerAnswer.answer ? playerAnswer.answer.toString().trim() : '';
+          if (rawAns) {
+            const cleanedAns = rawAns.toLowerCase();
+            if (wrongAnswersMap.has(cleanedAns)) {
+              wrongAnswersMap.get(cleanedAns).count++;
+            } else {
+              wrongAnswersMap.set(cleanedAns, { count: 1, originalAnswer: rawAns });
+            }
+          }
+        }
       }
     }
   }
@@ -949,6 +962,13 @@ function endQuestion(game) {
         playerAnswer.correct = matchedWinning;
       }
     }
+  }
+
+  // Sort and slice top 15 wrong answers for short-answer questions
+  if (question.type === 'short-answer') {
+    stats.topWrongAnswers = Array.from(wrongAnswersMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
   }
 
   // Send results to everybody
@@ -1220,6 +1240,7 @@ function showFinalPodium(game) {
   io.to(`game_${game.pin}`).emit('state-changed', {
     gameState: 'PODIUM',
     podium,
+    leaderboard: fullLeaderboard,
     surveys: surveySummaries
   });
 }

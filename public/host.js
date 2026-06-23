@@ -7,6 +7,8 @@ let quizName = '';
 let questionCount = 0;
 let timeRemainingInterval = null;
 let lastRankings = {}; // nickname -> rank from previous leaderboard
+let podiumLeaderboard = []; // Full leaderboard received at podium state
+let shownRankingsCount = 0; // Number of ranks shown in full rankings list on podium
 let localIp = '';
 let localPort = 3000;
 let currentQuestionAudio = null;
@@ -19,6 +21,9 @@ const stateQuestion = document.getElementById('state-question');
 const stateResults = document.getElementById('state-results');
 const stateLeaderboard = document.getElementById('state-leaderboard');
 const statePodium = document.getElementById('state-podium');
+const btnShowMoreRankings = document.getElementById('btn-show-more-rankings');
+const podiumRankingPanel = document.getElementById('podium-ranking-panel');
+const podiumRankingList = document.getElementById('podium-ranking-list');
 
 const quizSelect = document.getElementById('quiz-select');
 const btnCreateLobby = document.getElementById('btn-create-lobby');
@@ -324,6 +329,13 @@ btnLeaderboardNext.addEventListener('click', () => {
   }
 });
 
+// Event: Show More Rankings Click (from podium)
+if (btnShowMoreRankings) {
+  btnShowMoreRankings.addEventListener('click', () => {
+    renderMoreRankings();
+  });
+}
+
 // Event: Answers Count Update during Active Question
 socket.on('answers-count-update', (data) => {
   questionAnswersCount.textContent = data.count;
@@ -612,6 +624,11 @@ socket.on('state-changed', (data) => {
     resultsQTitle.textContent = currentQuestion.question;
     resultsCorrectText.textContent = data.correctAnswer;
 
+    const wrongAnswersContainer = document.getElementById('results-wrong-answers-container');
+    if (wrongAnswersContainer) {
+      wrongAnswersContainer.style.display = 'none';
+    }
+
     // Render results question image if present
     const resultsImageContainer = document.getElementById('results-image-container');
     const resultsImage = document.getElementById('results-image');
@@ -658,6 +675,8 @@ socket.on('state-changed', (data) => {
     } else if (currentQuestion.type === 'true-false') {
       optCount = 2;
     }
+
+
 
     let wrapperWidth = '130px';
     let imgSize = '76px';
@@ -763,6 +782,31 @@ socket.on('state-changed', (data) => {
         barWrapper.appendChild(labelDiv);
         resultsChart.appendChild(barWrapper);
       });
+
+      // Render top wrong answers if available
+      const wrongAnswersList = document.getElementById('results-wrong-answers-list');
+      if (wrongAnswersContainer && wrongAnswersList) {
+        wrongAnswersList.innerHTML = '';
+        if (stats.topWrongAnswers && stats.topWrongAnswers.length > 0) {
+          stats.topWrongAnswers.forEach(item => {
+            const entry = document.createElement('div');
+            entry.style.display = 'flex';
+            entry.style.justifyContent = 'space-between';
+            entry.style.padding = '10px 20px';
+            entry.style.background = 'rgba(255, 255, 255, 0.05)';
+            entry.style.borderRadius = '12px';
+            entry.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+            entry.innerHTML = `
+              <span style="color: var(--text-primary);">"${escapeHtml(item.originalAnswer)}"</span>
+              <span style="color: var(--red-tri); font-weight: 800;">${item.count} player${item.count > 1 ? 's' : ''}</span>
+            `;
+            wrongAnswersList.appendChild(entry);
+          });
+          wrongAnswersContainer.style.display = 'block';
+        } else {
+          wrongAnswersContainer.style.display = 'none';
+        }
+      }
       
     } else if (currentQuestion.type === 'true-false') {
       resultsChart.style.display = 'flex';
@@ -1137,6 +1181,21 @@ socket.on('state-changed', (data) => {
     try {
       const podium = data.podium || [];
 
+      // Initialize full rankings list
+      podiumLeaderboard = data.leaderboard || [];
+      shownRankingsCount = 0;
+      if (podiumRankingList) {
+        podiumRankingList.innerHTML = '';
+      }
+      if (podiumRankingPanel) {
+        if (podiumLeaderboard.length > 0) {
+          podiumRankingPanel.style.display = 'block';
+          renderMoreRankings(); // Show first 5
+        } else {
+          podiumRankingPanel.style.display = 'none';
+        }
+      }
+
       // Clear and rebuild podium container dynamically
       const podiumContainer = document.querySelector('.podium-container');
       if (podiumContainer) {
@@ -1317,3 +1376,66 @@ function showSection(sectionToShow) {
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
+
+function renderMoreRankings() {
+  if (!podiumRankingList || !podiumLeaderboard) return;
+
+  const nextBatch = podiumLeaderboard.slice(shownRankingsCount, shownRankingsCount + 5);
+  nextBatch.forEach((player, index) => {
+    const overallIndex = shownRankingsCount + index;
+    const row = document.createElement('div');
+    row.className = `leaderboard-row ${overallIndex < 3 ? 'top-three' : ''}`;
+    
+    // Rank change badge
+    let rankChangeBadge = '';
+    if (lastRankings[player.nickname] !== undefined) {
+      const delta = lastRankings[player.nickname] - (overallIndex + 1);
+      if (delta > 0) {
+        rankChangeBadge = `<span class="rank-change up">▲${delta}</span>`;
+      } else if (delta < 0) {
+        rankChangeBadge = `<span class="rank-change down">▼${Math.abs(delta)}</span>`;
+      } else {
+        rankChangeBadge = `<span class="rank-change same">—</span>`;
+      }
+    }
+
+    let streakBadge = '';
+    if (player.streak >= 2) {
+      streakBadge = `<span class="streak-tag">🔥 STREAK x${player.streak}</span>`;
+    }
+
+    row.innerHTML = `
+      <div class="left">
+        <span class="rank">${overallIndex + 1}</span>
+        <span style="margin-right: 8px; font-size: 1.4rem;">${player.avatar || '👾'}</span>
+        <span>${escapeHtml(player.nickname)} ${streakBadge}</span>
+        ${rankChangeBadge}
+      </div>
+      <div class="score">${player.score}</div>
+    `;
+
+    // Stagger entry animation slightly
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-20px)';
+    setTimeout(() => {
+      row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      row.style.opacity = '1';
+      row.style.transform = 'translateX(0)';
+    }, index * 100);
+
+    podiumRankingList.appendChild(row);
+  });
+
+  shownRankingsCount += nextBatch.length;
+
+  if (shownRankingsCount >= podiumLeaderboard.length) {
+    if (btnShowMoreRankings) btnShowMoreRankings.style.display = 'none';
+  } else {
+    if (btnShowMoreRankings) {
+      btnShowMoreRankings.style.display = 'inline-block';
+      btnShowMoreRankings.textContent = `Show More (${Math.min(5, podiumLeaderboard.length - shownRankingsCount)})`;
+    }
+  }
+}
+
+
